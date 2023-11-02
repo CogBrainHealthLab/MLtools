@@ -8,7 +8,7 @@ library(xgboost)
 ##################################################################################################################
 ##################################################################################################################
   #XGBlinear
-    XGBlinear=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etarange=c(0.001, 0.2),nthread=4)
+    XGBlinear=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etarange=c(0.001, 0.2),nthread=4, nround=500)
     {
       ## checked required packages
       list.of.packages = c("doParallel", "ParBayesianOptimization","xgboost")
@@ -56,7 +56,7 @@ library(xgboost)
       
       opt_params = append(list(booster = "gblinear",objective = "reg:squarederror",eval_metric = "mae"), getBestPars(bayes_out))
       
-      xgbcv = xgb.cv(params = opt_params,data=xgb.DMatrix(data = train_dat, label = outcome),nround = 1000,folds = folds,prediction = TRUE,early_stopping_rounds = 5,verbose = 0,maximize = F)
+      xgbcv = xgb.cv(params = opt_params,data=xgb.DMatrix(data = train_dat, label = outcome),nround = nround,folds = folds,prediction = TRUE,early_stopping_rounds = 5,verbose = 0,maximize = F)
       
       #final XGB model with optimal hyperparameters and nround
       xg_mod = xgboost(data = xgb.DMatrix(data = train_dat, label = outcome), params = opt_params, nround = xgbcv$best_iteration, verbose = F)
@@ -65,7 +65,7 @@ library(xgboost)
 ##################################################################################################################
 ##################################################################################################################
   #XGBtree
-    XGBtree=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etarange=c(0.001, 0.2),max_depth = c(1L, 10L),min_child_weight = c(1, 50),subsample = c(0.1, 1),nthread=4)
+    XGBtree=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etarange=c(0.001, 0.2),max_depth = c(1L, 10L),min_child_weight = c(1, 50),subsample = c(0.1, 1),nthread=4,nround=500)
     {
       list.of.packages = c("doParallel", "ParBayesianOptimization","xgboost")
       new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -116,7 +116,7 @@ library(xgboost)
       
       opt_params = append(list(booster = "gbtree",objective = "reg:squarederror",eval_metric = "mae"), getBestPars(bayes_out))
       
-      xgbcv = xgb.cv(params = opt_params,data=xgb.DMatrix(data = train_dat, label = outcome),nround = 1000,folds = folds,prediction = TRUE,early_stopping_rounds = 5,verbose = 0,maximize = F)
+      xgbcv = xgb.cv(params = opt_params,data=xgb.DMatrix(data = train_dat, label = outcome),nround = nround,folds = folds,prediction = TRUE,early_stopping_rounds = 5,verbose = 0,maximize = F)
       
       #final XGB model with optimal hyperparameters and nround
       xg_mod = xgboost(data = xgb.DMatrix(data = train_dat, label = outcome), params = opt_params, nround = xgbcv$best_iteration, verbose = F)
