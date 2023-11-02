@@ -8,10 +8,18 @@ library(xgboost)
 ##################################################################################################################
 ##################################################################################################################
   #XGBlinear
-    XGBlinear=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etarange=c(0.001, 0.2),ncore=4){
-      registerDoParallel(ncore)
+    XGBlinear=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etarange=c(0.001, 0.2),nthread=4)
+    {
+      ## checked required packages
+      list.of.packages = c("doParallel", "ParBayesianOptimization","xgboost")
+      new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+      if(length(new.packages)) 
+      {
+        cat(paste("The following package(s) are required and will be installed:\n",new.packages,"\n"))
+        install.packages(new.packages)
+      }
+      registerDoParallel(nthread)
       folds=createFolds(outcome,k=5)
-      nthread=5
       bounds = list(lambda = lambdarange,alpha = alpharange,eta = etarange)
       dtrain = xgb.DMatrix(data = train_dat, label = outcome)
       cl = makeCluster(nthread)
@@ -57,11 +65,18 @@ library(xgboost)
 ##################################################################################################################
 ##################################################################################################################
   #XGBtree
-    XGBtree=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etarange=c(0.001, 0.2),max_depth = c(1L, 10L),min_child_weight = c(1, 50),subsample = c(0.1, 1),ncore=4){
-      registerDoParallel(ncore)
+    XGBtree=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etarange=c(0.001, 0.2),max_depth = c(1L, 10L),min_child_weight = c(1, 50),subsample = c(0.1, 1),nthread=4)
+    {
+      list.of.packages = c("doParallel", "ParBayesianOptimization","xgboost")
+      new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+      if(length(new.packages)) 
+      {
+        cat(paste("The following package(s) are required and will be installed:\n",new.packages,"\n"))
+        install.packages(new.packages)
+      }
+      registerDoParallel(nthread)
       folds=createFolds(outcome,k=5)
       bounds = list(lambda = lambdarange,alpha = alpharange,eta = etarange, max_depth=max_depth, min_child_weight=min_child_weight,subsample=subsample)
-      nthread=8
 
       dtrain = xgb.DMatrix(data = train_dat, label = outcome)
       cl <- makeCluster(nthread)
