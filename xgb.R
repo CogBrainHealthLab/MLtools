@@ -1,3 +1,6 @@
+## WRAPPERS FOR BAYESIAN OPTIMIZED XGBOOSTING
+## FOR USE IN THE COGNITIVE AND BRAIN HEALTH LABORATORY
+
 library(doParallel)
 library(ParBayesianOptimization)
 library(xgboost)
