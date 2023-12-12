@@ -50,10 +50,10 @@ XGBlinear=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etar
   
   opt_params = append(list(booster = "gblinear",objective = "reg:squarederror",eval_metric = "mae"),ParBayesianOptimization::getBestPars(bayes_out))
   
-  xgbcv = xgboost::xgb.cv(params = opt_params,data=xgboost::xgb.DMatrix(data = train_dat, label = outcome),nround = nround,folds = folds,prediction = TRUE,early_stopping_rounds = 5,verbose = 0,maximize = F)
+  xgbcv = xgboost::xgb.cv(params = opt_params,data=xgboost::xgb.DMatrix(data = train_dat, label = outcome),nround = nround,folds = folds,prediction = TRUE,early_stopping_rounds = 5,verbose = 0,maximize = F, nthread=nthread)
   
   #final XGB model with optimal hyperparameters and nround
-  xg_mod = xgboost::xgboost(data = xgboost::xgb.DMatrix(data = train_dat, label = outcome), params = opt_params, nround = xgbcv$best_iteration, verbose = F)
+  xg_mod = xgboost::xgboost(data = xgboost::xgb.DMatrix(data = train_dat, label = outcome), params = opt_params, nround = xgbcv$best_iteration, verbose = F, nthread=nthread)
   return(xg_mod)
 }
 ##################################################################################################################
@@ -108,10 +108,10 @@ XGBtree=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etaran
   
   opt_params = append(list(booster = "gbtree",objective = "reg:squarederror",eval_metric = "mae"), ParBayesianOptimization::getBestPars(bayes_out))
   
-  xgbcv = xgboost::xgb.cv(params = opt_params,data=xgboost::xgb.DMatrix(data = train_dat, label = outcome),nround = nround,folds = folds,prediction = TRUE,early_stopping_rounds = 5,verbose = 0,maximize = F)
+  xgbcv = xgboost::xgb.cv(params = opt_params,data=xgboost::xgb.DMatrix(data = train_dat, label = outcome),nround = nround,folds = folds,prediction = TRUE,early_stopping_rounds = 5,verbose = 0,maximize = F, nthread=nthread)
   
   #final XGB model with optimal hyperparameters and nround
-  xg_mod = xgboost::xgboost(data = xgboost::xgb.DMatrix(data = train_dat, label = outcome), params = opt_params, nround = xgbcv$best_iteration, verbose = F)
+  xg_mod = xgboost::xgboost(data = xgboost::xgb.DMatrix(data = train_dat, label = outcome), params = opt_params, nround = xgbcv$best_iteration, verbose = F, nthread=nthread)
   return(xg_mod)
 }
 
