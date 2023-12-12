@@ -35,7 +35,7 @@ cpm.train=function(data,outcome,p=0.05)
       weights[k]=-1
       }
     }
-  ## network strengths
+  ## network models
   
   if(NROW(which(weights==1))>0)
   {
