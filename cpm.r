@@ -22,7 +22,7 @@ cpm.train=function(data,outcome,p=0.05)
       outcome=outcome[-idx.missing]
     }
   
-  weights=rep(NA,NCOL(data))
+  weights=rep(0,NCOL(data))
   ## feature selection
   for (k in 1:NCOL(data))
     {
