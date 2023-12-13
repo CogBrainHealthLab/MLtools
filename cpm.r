@@ -147,7 +147,7 @@ cpm.train.cv=function(data,outcome,p,nfolds=5,nthread)
       outcome=outcome[-idx.missing]
     }
   
-  ##setup ennvironment
+  ##setup environment
   `%dopar%` = foreach::`%dopar%`
   folds=caret::createFolds(outcome,k=nfolds)
   cl = parallel::makeCluster(nthread)
