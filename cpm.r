@@ -108,29 +108,34 @@ cpm.predict=function(model,test.data, network="both")
 cpm.train.cv=function(data,outcome,p,nfolds=5,nthread)
 {
   ## checks
-  #require packages
-  list.of.packages = c("caret","foreach", "doParallel", "parallel")
-  new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-  
-  if(length(new.packages)) 
-  {
-    cat(paste("The following package(s) are required and will be installed:\n",new.packages,"\n"))
-    install.packages(new.packages)
-  }  
-  #number of rows match
-  if(NROW(data)!=NROW(outcome))
-  {
-    stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))
-  }
-  
-  #missing data
-  idx.missing=which(is.na(outcome)==T)
-  if(NROW(idx.missing)>0)
-  {
-    cat(paste("\n",NROW(idx.missing)," missing values are detected in the outcome variable. Subjects with missing values will be excluded in the training procedure\n",sep=""))
-    data=data[-idx.missing,]
-    outcome=outcome[-idx.missing]
-  }
+    # pvalues
+      if(length(p)<2)
+      {
+        stop("At least 2 p-values should be entered")
+      } 
+    #require packages
+    list.of.packages = c("caret","foreach", "doParallel", "parallel")
+    new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+    
+    if(length(new.packages)) 
+    {
+      cat(paste("The following package(s) are required and will be installed:\n",new.packages,"\n"))
+      install.packages(new.packages)
+    }  
+    #number of rows match
+    if(NROW(data)!=NROW(outcome))
+    {
+      stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))
+    }
+    
+    #missing data
+    idx.missing=which(is.na(outcome)==T)
+    if(NROW(idx.missing)>0)
+    {
+      cat(paste("\n",NROW(idx.missing)," missing values are detected in the outcome variable. Subjects with missing values will be excluded in the training procedure\n",sep=""))
+      data=data[-idx.missing,]
+      outcome=outcome[-idx.missing]
+    }
   
   `%dopar%` = foreach::`%dopar%`
   folds=caret::createFolds(outcome,k=nfolds)
