@@ -34,6 +34,7 @@ cpm.train=function(data,outcome,p=0.05)
   }
   
   weights=rep(0,NCOL(data))
+  data=data.matrix(data)
   ## feature selection
   for (k in 1:NCOL(data))
   {
@@ -117,9 +118,10 @@ cpm.train.cv=function(data,outcome,p,nfolds=5,nthread)
   }  
   
   `%dopar%` = foreach::`%dopar%`
-  
   folds=caret::createFolds(outcome,k=nfolds)
   doParallel::registerDoParallel(nthread)
+  
+  data=data.matrix(data)
   
   rvals=foreach::foreach (iter=1:length(p), .combine=rbind,.export=c("cpm.train","cpm.predict")) %dopar% 
     {
