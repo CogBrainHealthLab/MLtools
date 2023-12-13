@@ -104,11 +104,11 @@ cpm.predict=function(model,test.data, network="both")
 ##################################################################################################################
 ##################################################################################################################
 
-cpm.train.cv=function(data,outcome,p,nthread)
+cpm.train.cv=function(data,outcome,p,nfolds=5,nthread)
 {
   `%dopar%` = foreach::`%dopar%`
   
-  folds=caret::createFolds(outcome,k=5)
+  folds=caret::createFolds(outcome,k=nfolds)
   doParallel::registerDoParallel(nthread)
   
   rvals=foreach::foreach (iter=1:length(p), .combine=rbind,.export=c("cpm.train","cpm.predict")) %dopar% 
@@ -141,7 +141,6 @@ cpm.train.cv=function(data,outcome,p,nthread)
 ##################################################################################################################
 ##################################################################################################################
 ## EXAMPLE:
-
 #p=0.05-(1:9)*0.005
 #cv.model=cpm.train.cv(data=dat, outcome=outcome, p=p,nthread=10)
 #model=cpm.train(data=dat_FC, outcome=dat_beh$age, p=model$opt.pvals)
