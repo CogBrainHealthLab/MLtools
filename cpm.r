@@ -7,34 +7,33 @@
 cpm.train=function(data,outcome,p=0.05)
 {
   ##checks
-  #pvalues
-  if(length(p)==1)
-  {
-    p.posneg=c(p,p)
-  } else if (length(p)==2)
-  {
-    p.posneg=p
-  } else 
-  {
-    stop("Only one or two pvalues should be entered")
-  }
-  #number of rows match
-  if(NROW(data)!=NROW(outcome))
-  {
-    stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))
-  }
-  
-  #missing data
-  idx.missing=which(is.na(outcome)==T)
-  if(NROW(idx.missing)>0)
-  {
-    cat(paste("\n",NROW(idx.missing)," missing values are detected in the outcome variable. Subjects with missing values will be excluded in the training procedure\n",sep=""))
-    data=data[-idx.missing,]
-    outcome=outcome[-idx.missing]
-  }
-  
-  weights=rep(NA,NCOL(data))
+    #pvalues
+    if(length(p)==1)
+    {
+      p.posneg=c(p,p)
+    } else if (length(p)==2)
+    {
+      p.posneg=p
+    } else 
+    {
+      stop("Only one or two pvalues should be entered")
+    }
+    #number of rows match
+    if(NROW(data)!=NROW(outcome))
+    {
+      stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))
+    }
+    #missing data
+    idx.missing=which(is.na(outcome)==T)
+    if(NROW(idx.missing)>0)
+    {
+      cat(paste("\n",NROW(idx.missing)," missing values are detected in the outcome variable. Subjects with missing values will be excluded in the training procedure\n",sep=""))
+      data=data[-idx.missing,]
+      outcome=outcome[-idx.missing]
+    }
+    
   ## feature selection
+  weights=rep(NA,NCOL(data))
   for (k in 1:NCOL(data))
   {
     corr=cor.test(data[,k],outcome)
@@ -47,7 +46,6 @@ cpm.train=function(data,outcome,p=0.05)
     }
   }
   ## network models
-  
   if(NROW(which(weights==1))>1)
   {
     pos.netstr=rowSums(data[,which(weights==1)])  
