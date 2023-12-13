@@ -106,8 +106,8 @@ cpm.predict=function(model,test.data, network="both")
 
 cpm.train.cv=function(data,outcome,p,nfolds=5,nthread)
 {
-  ## check require packages and load them
-  list.of.packages = c("foreach", "doParallel")
+  ## check require packages
+  list.of.packages = c("foreach", "doParallel", "parallel")
   new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
   
   if(length(new.packages)) 
