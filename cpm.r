@@ -106,6 +106,16 @@ cpm.predict=function(model,test.data, network="both")
 
 cpm.train.cv=function(data,outcome,p,nfolds=5,nthread)
 {
+  ## check require packages and load them
+  list.of.packages = c("foreach", "doParallel")
+  new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  
+  if(length(new.packages)) 
+  {
+    cat(paste("The following package(s) are required and will be installed:\n",new.packages,"\n"))
+    install.packages(new.packages)
+  }  
+  
   `%dopar%` = foreach::`%dopar%`
   
   folds=caret::createFolds(outcome,k=nfolds)
