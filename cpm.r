@@ -33,7 +33,7 @@ cpm.train=function(data,outcome,p=0.05)
     outcome=outcome[-idx.missing]
   }
   
-  weights=rep(0,NCOL(data))
+  weights=rep(NA,NCOL(data))
   ## feature selection
   for (k in 1:NCOL(data))
   {
@@ -57,7 +57,6 @@ cpm.train=function(data,outcome,p=0.05)
     pos.netstr.coef=NA
     cat("\nNone of edges are significantly and positively correlated with the outcome. The positive network model cannot be constructed\n")
   }
-  
   if(NROW(which(weights==-1))>1)
   {
     neg.netstr=rowSums(data[,which(weights==-1)])  
@@ -193,11 +192,11 @@ cpm.train.cv=function(data,outcome,p,nfolds=5,nthread)
   
   idx.NA.pos=which(is.na(rvals[,1]))
   if(length(idx.NA.pos)>0)
-  {cat(paste("\nNote: No positive edges were selected when the p value of ",p[min(idx.NA.pos)]," or smaller was used\n", sep=""))}
+  {cat(paste("\nNote: No positive edges were selected when the p value of ",p[min(idx.NA.pos)]," or smaller was used", sep=""))}
   
   idx.NA.neg=which(is.na(rvals[,2]))
   if(length(idx.NA.neg)>0)
-  {cat(paste("\nNote: No negative edges were selected when the p value of ",p[min(idx.NA.neg)]," or smaller was used\n", sep=""))}
+  {cat(paste("\nNote: No negative edges were selected when the p value of ",p[min(idx.NA.neg)]," or smaller was used", sep=""))}
   
   parallel::stopCluster(cl)
   return(results)
