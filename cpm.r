@@ -78,6 +78,7 @@ cpm.train=function(data,outcome,p=0.05)
 
 cpm.predict=function(model,test.data, network="both")
 {
+  test.data=data.matrix(test.data)
   ##checks
   if(NROW(model$weights)!=NCOL(test.data))
   {
