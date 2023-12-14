@@ -158,7 +158,7 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
     pos.r.mat=pos.r.mat[order(pos.r.mat)]
     neg.r.mat=neg.r.mat[order(-neg.r.mat)]
    
-    n.int=11
+    n.int=17
     
     p=matrix(NA,nrow =n.int-1, ncol=2)
     pos.interval=NROW(pos.r.mat)/n.int
@@ -167,14 +167,14 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
       p[iter+1,1]=r_to_p(pos.r.mat[round(pos.interval*iter)])  
     }
     p[1,1]=r_to_p(r.thresh)
-    
+
     neg.interval=NROW(neg.r.mat)/n.int
     for(iter in 1:(n.int-2))
     {
       p[iter+1,2]=r_to_p(neg.r.mat[round(neg.interval*iter)])  
     }
     p[1,2]=r_to_p(-r.thresh)  
-    
+    p=p[c(1,5,9,12,14,15),]
   }
   #check pvalues
   
