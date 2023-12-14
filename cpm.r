@@ -150,31 +150,50 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
       t=(r*sqrt(NROW(outcome)-2))/(sqrt(1-(r^2)))
       return(2 * (1 - pt(abs(t), NROW(outcome)-2)))
     }
-    r.mat=abs(cor(data,outcome))
-    r.mat=r.mat[order(r.mat)]
-    selected.range=which(r.mat>0.15)
+    r.thresh=0.15
+    r.mat=cor(data,outcome)
+    pos.r.mat=r.mat[r.mat>r.thresh]
+    neg.r.mat=r.mat[r.mat< (-r.thresh)]
+    pos.r.mat=pos.r.mat[order(pos.r.mat)]
+    neg.r.mat=neg.r.mat[order(-neg.r.mat)]
+   
     n.int=11
-    interval=NROW(selected.range)/n.int
     
-    p=rep(NA,n.int-2)
+    p=matrix(NA,nrow =n.int-1, ncol=2)
+    pos.interval=NROW(pos.r.mat)/n.int
     for(iter in 1:(n.int-2))
     {
-      p[iter+1]=r_to_p(r.mat[selected.range[round(interval*iter)]])  
+      p[iter+1,1]=r_to_p(pos.r.mat[round(pos.interval*iter)])  
     }
-    p[1]=r_to_p(0.15)  
+    p[1,1]=r_to_p(r.thresh)
+    
+    neg.interval=NROW(neg.r.mat)/n.int
+    for(iter in 1:(n.int-2))
+    {
+      p[iter+1,2]=r_to_p(neg.r.mat[round(neg.interval*iter)])  
+    }
+    p[1,2]=r_to_p(-r.thresh)  
+    
   }
   #check pvalues
+  
   if(length(p)==1)
    {
      stop("At least 2 p-values should be entered")
-   } 
-
-  ##training
+   } else if (NCOL(p)==1)
+   {
+     p=cbind(p,p)
+   }
+  
+  ##setup environment
   folds=caret::createFolds(outcome,k=nfolds)
-  rvals=matrix(NA,nrow=length(p),ncol=2)
-  for(iter in 1:length(p))
+
+  
+  ##training
+  rvals=matrix(NA,nrow=NROW(p),ncol=2)
+  for(iter in 1:NROW(p))
     {
-      p.iter=p[iter]    
+      p.iter=p[iter,]    
       for (fold in 1:length(folds))
       {
         train_outcome=outcome[-folds[[fold]]]
@@ -188,8 +207,7 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
         {
           predscores.all=rbind(predscores.all,predscores.fold)
         }
-      }
-      
+      }      
       if(anyNA(predscores.all[,1]))
       {
         pos.net.r=NA  
@@ -204,7 +222,7 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
   }
   r.pos.min.idx=which(rvals[,1]==max(rvals[,1],na.rm = T))
   r.neg.min.idx=which(rvals[,2]==max(rvals[,2],na.rm = T))
-  results=list(c(p[r.pos.min.idx],p[r.neg.min.idx]),rvals,p)
+  results=list(c(p[r.pos.min.idx,1],p[r.neg.min.idx,2]),rvals,p)
   names(results)=c("opt.pvals","results","pvals")
   
   idx.NA.pos=which(is.na(rvals[,1]))
@@ -220,7 +238,7 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
 ##################################################################################################################
 ##################################################################################################################
 ## EXAMPLE:
-
-#cv.model=cpm.train.cv(data=dat, outcome=outcome)
+#p=0.05-(1:9)*0.005
+#cv.model=cpm.train.cv(data=dat, outcome=outcome, p=p,nthread=10)
 #model=cpm.train(data=dat_FC, outcome=dat_beh$age, p=model$opt.pvals)
 #predicted.score=cpm.predict(model = model, test.data=test.dat_FC,network="positive")
