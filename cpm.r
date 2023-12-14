@@ -163,19 +163,14 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
     }
     p[1]=r_to_p(0.15)  
   }
-  # pvalues
-  
+  #check pvalues
   if(length(p)==1)
    {
      stop("At least 2 p-values should be entered")
    } 
-  
-  ##setup environment
-  `%dopar%` = foreach::`%dopar%`
-  folds=caret::createFolds(outcome,k=nfolds)
 
-  
   ##training
+  folds=caret::createFolds(outcome,k=nfolds)
   rvals=matrix(NA,nrow=length(p),ncol=2)
   for(iter in 1:length(p))
     {
@@ -210,7 +205,7 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
   r.pos.min.idx=which(rvals[,1]==max(rvals[,1],na.rm = T))
   r.neg.min.idx=which(rvals[,2]==max(rvals[,2],na.rm = T))
   results=list(c(p[r.pos.min.idx],p[r.neg.min.idx]),rvals,p)
-  names(results)=c("opt.pvals","results")
+  names(results)=c("opt.pvals","results","pvals")
   
   idx.NA.pos=which(is.na(rvals[,1]))
   if(length(idx.NA.pos)>0)
