@@ -239,7 +239,8 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
 ##################################################################################################################
 ##################################################################################################################
 ## EXAMPLE:
-#p=0.05-(1:9)*0.005
-#cv.model=cpm.train.cv(data=dat, outcome=outcome, p=p,nthread=10)
+
+#source("https://github.com/CogBrainHealthLab/MLtools/blob/main/cpm.r?raw=TRUE")
+#cv.model=cpm.train.cv(data=dat, outcome=outcome)
 #model=cpm.train(data=dat_FC, outcome=dat_beh$age, p=model$opt.pvals)
 #predicted.score=cpm.predict(model = model, test.data=test.dat_FC,network="positive")
