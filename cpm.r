@@ -7,44 +7,45 @@
 cpm.train=function(data,outcome,p=0.05)
 {
   ##checks
-    #pvalues
-    if(length(p)==1)
-    {
-      p.posneg=c(p,p)
-    } else if (length(p)==2)
-    {
-      p.posneg=p
-    } else 
-    {
-      stop("Only one or two pvalues should be entered")
-    }
-    #number of rows match
-    if(NROW(data)!=NROW(outcome))
-    {
-      stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))
-    }
-    #missing data
-    idx.missing=which(is.na(outcome)==T)
-    if(NROW(idx.missing)>0)
-    {
-      cat(paste("\n",NROW(idx.missing)," missing values are detected in the outcome variable. Subjects with missing values will be excluded in the training procedure\n",sep=""))
-      data=data[-idx.missing,]
-      outcome=outcome[-idx.missing]
-    }
-    
+  #pvalues
+  data=data.matrix(data)
+  if(length(p)==1)
+  {
+    p.posneg=c(p,p)
+  } else if (length(p)==2)
+  {
+    p.posneg=p
+  } else 
+  {
+    stop("Only one or two pvalues should be entered")
+  }
+  #number of rows match
+  if(NROW(data)!=NROW(outcome))
+  {
+    stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))
+  }
+  #missing data
+  idx.missing=which(is.na(outcome)==T)
+  if(NROW(idx.missing)>0)
+  {
+    cat(paste("\n",NROW(idx.missing)," missing values are detected in the outcome variable. Subjects with missing values will be excluded in the training procedure\n",sep=""))
+    data=data[-idx.missing,]
+    outcome=outcome[-idx.missing]
+  }
+  
   ## feature selection
   weights=rep(NA,NCOL(data))
-  for (k in 1:NCOL(data))
-  {
-    corr=cor.test(data[,k],outcome)
-    if(corr$p.value<p.posneg[1] & corr$estimate>0)
-    {
-      weights[k]=1
-    } else if(corr$p.value<p.posneg[2] & corr$estimate<0)
-    {
-      weights[k]=-1
-    }
-  }
+
+  pos.tcrit=qt((p.posneg[1]/2), NROW(outcome)-2, lower=FALSE)
+  neg.tcrit=qt((p.posneg[2]/2), NROW(outcome)-2, lower=FALSE)
+  pos.rcrit=sqrt(pos.tcrit^2/(pos.tcrit^2+NROW(outcome)-2))
+  neg.rcrit=sqrt(neg.tcrit^2/(neg.tcrit^2+NROW(outcome)-2))
+  
+  r.mat=cor(data,outcome)
+  
+  weights[r.mat> pos.rcrit]=1
+  weights[r.mat< -neg.rcrit]=-1
+
   ## network models
   if(NROW(which(weights==1))>1)
   {
@@ -105,7 +106,7 @@ cpm.predict=function(model,test.data, network="both")
       both=rep(NA,NROW(test.data))
     } else
     {
-    both=rowSums(test.data[,which(model$weights==1)])*model$both.network.coef[2]+rowSums(test.data[,which(model$weights==-1)])*model$both.network.coef[3]+model$both.network.coef[1]
+      both=rowSums(test.data[,which(model$weights==1)])*model$both.network.coef[2]+rowSums(test.data[,which(model$weights==-1)])*model$both.network.coef[3]+model$both.network.coef[1]
     }
     predscore=data.frame(positive,negative,both)
   }
@@ -114,45 +115,69 @@ cpm.predict=function(model,test.data, network="both")
 ##################################################################################################################
 ##################################################################################################################
 
-cpm.train.cv=function(data,outcome,p,nfolds=5,nthread)
-{ ##checks
-    # pvalues
-    if(length(p)<2)
+cpm.train.cv=function(data,outcome,p,nfolds=5)
+{ 
+  data=data.matrix(data)
+  ##checks
+  #require packages
+  list.of.packages = c("caret","foreach", "doParallel", "parallel")
+  new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  
+  if(length(new.packages)) 
+  {
+    cat(paste("The following package(s) are required and will be installed:\n",new.packages,"\n"))
+    install.packages(new.packages)
+  }  
+  #number of rows match
+  if(NROW(data)!=NROW(outcome))
+  {
+    stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))
+  }
+  
+  #missing data
+  idx.missing=which(is.na(outcome)==T)
+  if(NROW(idx.missing)>0)
+  {
+    data=data[-idx.missing,]
+    outcome=outcome[-idx.missing]
+  }
+  
+  #generate sequence of p-values to tune
+  if(missing(p))
+  {
+    r_to_p=function(r)
     {
-      stop("At least 2 p-values should be entered")
-    } 
-    #require packages
-    list.of.packages = c("caret","foreach", "doParallel", "parallel")
-    new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-    
-    if(length(new.packages)) 
-    {
-      cat(paste("The following package(s) are required and will be installed:\n",new.packages,"\n"))
-      install.packages(new.packages)
-    }  
-    #number of rows match
-    if(NROW(data)!=NROW(outcome))
-    {
-      stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))
+      t=(r*sqrt(NROW(outcome)-2))/(sqrt(1-(r^2)))
+      return(2 * (1 - pt(abs(t), NROW(outcome)-2)))
     }
+    r.mat=abs(cor(data,outcome))
+    r.mat=r.mat[order(r.mat)]
+    selected.range=which(r.mat>0.15)
+    n.int=11
+    interval=NROW(selected.range)/n.int
     
-    #missing data
-    idx.missing=which(is.na(outcome)==T)
-    if(NROW(idx.missing)>0)
+    p=rep(NA,n.int-2)
+    for(iter in 1:(n.int-2))
     {
-      cat(paste("\n",NROW(idx.missing)," missing values are detected in the outcome variable. Subjects with missing values will be excluded in the training procedure\n",sep=""))
-      data=data[-idx.missing,]
-      outcome=outcome[-idx.missing]
+      p[iter+1]=r_to_p(r.mat[selected.range[round(interval*iter)]])  
     }
+    p[1]=r_to_p(0.15)  
+  }
+  # pvalues
+  
+  if(length(p)==1)
+   {
+     stop("At least 2 p-values should be entered")
+   } 
   
   ##setup environment
   `%dopar%` = foreach::`%dopar%`
   folds=caret::createFolds(outcome,k=nfolds)
-  cl = parallel::makeCluster(nthread)
-  doParallel::registerDoParallel(cl)
+
   
   ##training
-  rvals=foreach::foreach (iter=1:length(p), .combine=rbind,.export=c("cpm.train","cpm.predict")) %dopar% 
+  rvals=matrix(NA,nrow=length(p),ncol=2)
+  for(iter in 1:length(p))
     {
       p.iter=p[iter]    
       for (fold in 1:length(folds))
@@ -172,20 +197,19 @@ cpm.train.cv=function(data,outcome,p,nfolds=5,nthread)
       
       if(anyNA(predscores.all[,1]))
       {
-      pos.net.r=NA  
+        pos.net.r=NA  
       } else {pos.net.r=cor(outcome[unlist(folds)],predscores.all[,1])}
-        
+      
       if(anyNA(predscores.all[,2]))
       {
         neg.net.r=NA  
       } else {neg.net.r=cor(outcome[unlist(folds)],predscores.all[,2])}
-      
-      return(c(pos.net.r,neg.net.r))
-    }
-  
+
+      rvals[iter,]=c(pos.net.r,neg.net.r)
+  }
   r.pos.min.idx=which(rvals[,1]==max(rvals[,1],na.rm = T))
   r.neg.min.idx=which(rvals[,2]==max(rvals[,2],na.rm = T))
-  results=list(c(p[r.pos.min.idx],p[r.neg.min.idx]),rvals)
+  results=list(c(p[r.pos.min.idx],p[r.neg.min.idx]),rvals,p)
   names(results)=c("opt.pvals","results")
   
   idx.NA.pos=which(is.na(rvals[,1]))
@@ -195,14 +219,13 @@ cpm.train.cv=function(data,outcome,p,nfolds=5,nthread)
   idx.NA.neg=which(is.na(rvals[,2]))
   if(length(idx.NA.neg)>0)
   {cat(paste("\nNote: No negative edges were selected when the p value of ",p[min(idx.NA.neg)]," or smaller was used", sep=""))}
-  
-  parallel::stopCluster(cl)
+
   return(results)
 }
 ##################################################################################################################
 ##################################################################################################################
 ## EXAMPLE:
-#p=0.05-(1:9)*0.005
-#cv.model=cpm.train.cv(data=dat, outcome=outcome, p=p,nthread=10)
+
+#cv.model=cpm.train.cv(data=dat, outcome=outcome)
 #model=cpm.train(data=dat_FC, outcome=dat_beh$age, p=model$opt.pvals)
 #predicted.score=cpm.predict(model = model, test.data=test.dat_FC,network="positive")
