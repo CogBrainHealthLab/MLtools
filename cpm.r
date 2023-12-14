@@ -34,7 +34,7 @@ cpm.train=function(data,outcome,p=0.05)
   }
   
   ## feature selection
-  weights=rep(NA,NCOL(data))
+  weights=rep(0,NCOL(data))
 
   pos.tcrit=qt((p.posneg[1]/2), NROW(outcome)-2, lower=FALSE)
   neg.tcrit=qt((p.posneg[2]/2), NROW(outcome)-2, lower=FALSE)
