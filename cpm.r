@@ -238,9 +238,66 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
 }
 ##################################################################################################################
 ##################################################################################################################
+
+cpm.lesion=function(train.data,test.data,train.outcome, test.outcome,p)
+{
+  #define variables and label parameters
+  data=data.matrix(dat_FC)
+
+  labels.url=c("https://github.com/CogBrainHealthLab/VizConnectome/blob/main/labels/labelsSC_AAL90.csv?raw=TRUE",
+               "https://github.com/CogBrainHealthLab/VizConnectome/blob/main/labels/labelsFC_schaefer119.csv?raw=TRUE",
+               "https://github.com/CogBrainHealthLab/VizConnectome/blob/main/labels/labelsFC_schaefer219.csv?raw=TRUE",
+               "https://github.com/CogBrainHealthLab/VizConnectome/blob/main/labels/labelsFC_brainnetome_yeo.csv?raw=TRUE")
+  
+  edge_lengths=c(4005,7021,23871,30135)
+  
+  if(is.na(match(NCOL(data),edge_lengths)))
+  {
+    stop("The number of columns in the input matrix is not consistent with any of the recognized parcellation schemes. The input matrix should contain 4005, 7021, 23871 or 30135 columns")      
+  } else
+  {
+    atlas=match(NCOL(data),edge_lengths)
+  }
+  
+  label=read.csv(labels.url[atlas])
+  nnode=NROW(label)
+  networks.list=data.frame(unique(cbind(as.numeric(label$region),label$regionlabel)))
+  names(networks.list)=c("netno","network.name")
+  networks.list=networks.list[order(networks.list$netno),]
+  
+  results=matrix(NA,nrow=NROW(networks.list)+1,ncol=4)
+  #CPM (all networks)
+  
+  model.allnetworks=cpm.train(data=train.data, outcome=train.outcome, p=p)
+  pred.allnetwork=cpm.predict(model = model.allnetworks, test.data=test.data)
+  results[1,2:4]=cor(test.outcome,pred.allnetwork)
+  #CPM (leave-one-network out)
+  
+  for (netno in 1:NROW(networks.list))
+  {
+    FC_matrix=array(rep(NA,nnode^2),dim=c(nnode,nnode))
+    FC_matrix[upper.tri(FC_matrix, diag=FALSE)] = 1:edge_lengths[atlas]
+    FC_matrix.1net=FC_matrix
+    FC_matrix.1net[which(label$region==netno),which(label$region==netno)]=NA
+    edge.column=FC_matrix.1net[upper.tri(FC_matrix.1net, diag=FALSE)]
+    remove.idx=which(is.na(edge.column)==T)
+    
+    model.1net=cpm.train(data=train.data[,-remove.idx], outcome=train.outcome, p=p)
+    pred.1net=cpm.predict(model = model.1net, test.data=test.data[,-remove.idx])
+    results[netno+1,2:4]=cor(test.outcome,pred.1net)
+  }
+  results[1,1]="none removed"
+  results[c(2:(NROW(networks.list)+1)),1]=paste("removed",networks.list$network.name, sep=" ")
+  results=data.frame(results)
+  results[, c(2:4)]=sapply(results[, c(2:4)], as.numeric)
+  names(results)=c("lesion.model","positive","negative","both")
+  return(results)
+}
+##################################################################################################################
+##################################################################################################################
 ## EXAMPLE:
 
 #source("https://github.com/CogBrainHealthLab/MLtools/blob/main/cpm.r?raw=TRUE")
 #cv.model=cpm.train.cv(data=dat, outcome=outcome)
 #model=cpm.train(data=dat_FC, outcome=dat_beh$age, p=model$opt.pvals)
-#predicted.score=cpm.predict(model = model, test.data=test.dat_FC,network="positive")
+#predicted.score=cpm.predict(model = model, test.data=test.dat_FC)
