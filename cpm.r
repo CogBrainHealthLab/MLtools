@@ -121,7 +121,7 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
   data=data.matrix(data)
   ##checks
   #require packages
-  list.of.packages = c("caret","foreach", "doParallel", "parallel")
+  list.of.packages = c("caret")
   new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
   
   if(length(new.packages)) 
