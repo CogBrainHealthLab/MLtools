@@ -57,7 +57,7 @@ cluster.stat=function(data,nnodes,tcrit)
 
 ############################################################################################################################
 ############################################################################################################################
-NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=5, p=0.001)
+NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread, p=0.001)
 {
   ##unpermuted model
   mod=lm(FC_data~data.matrix(all_predictors))
@@ -187,5 +187,4 @@ extract.edges=function(NBS.obj,clust.no=1)
 }
 ############################################################################################################################
 ############################################################################################################################
-
-##source(
+##source("https://github.com/CogBrainHealthLab/MLtools/blob/main/NBS.r?raw=TRUE")
