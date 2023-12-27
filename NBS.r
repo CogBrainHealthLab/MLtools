@@ -127,7 +127,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread, p=0.001)
   
   orig.clust[,c(3,4)][orig.clust[,c(3,4)]==0]=paste("<",1/nperm,sep="")
   
-  orig.clust=cbind(c(1:1:nrow(orig.clust)),orig.clust)
+  orig.clust=cbind(c(1:nrow(orig.clust)),orig.clust)
   colnames(orig.clust)=c("network no.","strength.unweighted","strength.weighted","pFWE.unweighted","pFWE.weighted")
   returnobj=list(orig.clust,t.orig, tcrit)
   names(returnobj)=c("results","t.orig","tcrit")
