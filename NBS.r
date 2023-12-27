@@ -121,8 +121,8 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread, p=0.001)
   
   for(row in 1:nrow(orig.clust))
   {
-    orig.clust[,3]=length(which(max.netstr[,1]>orig.clust[row,1]))/nperm
-    orig.clust[,4]=length(which(max.netstr[,2]>orig.clust[row,2]))/nperm
+    orig.clust[row,3]=length(which(max.netstr[,1]>orig.clust[row,1]))/nperm
+    orig.clust[row,4]=length(which(max.netstr[,2]>orig.clust[row,2]))/nperm
   }
   
   orig.clust[,c(3,4)][orig.clust[,c(3,4)]==0]=paste("<",1/nperm,sep="")
