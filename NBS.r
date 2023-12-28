@@ -30,7 +30,7 @@ cluster.stat=function(data,nnodes,tcrit)
   tstat.thresholded.bin[abs(tstat.thresholded.bin)>0]=1
   
   ##setting up FCmatrices
-  nnodes=(0.5 + sqrt(0.5^2 - 4 * 0.5 * -NCOL(FC_data))) / (2 * 0.5)
+  nnodes=(0.5 + sqrt(0.5^2 - 4 * 0.5 * -length(data))) / (2 * 0.5)
   FC_mat.unweighted=matrix(0,nrow=nnodes,ncol=nnodes)
   FC_mat.weighted=matrix(0,nrow=nnodes,ncol=nnodes)
   
