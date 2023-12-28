@@ -59,7 +59,7 @@ cluster.stat=function(data,nnodes,tcrit)
 
 ############################################################################################################################
 ############################################################################################################################
-NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread, p=0.001)
+NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.001)
 {
   ##checks
     #check required packages
@@ -72,7 +72,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread, p=0.001)
     }  
   
     #check if nrow is consistent for all_predictors and FC_data
-    if(NROW(FC_data)!=NROW(all_predictors))  {stop(paste("The number of rows for FC_data",NROW(FC_data),"and all_predictors",NROW(all_predictors),"are not the same",sep=""))}
+    if(NROW(FC_data)!=NROW(all_predictors))  {stop(paste("The number of rows for FC_data (",NROW(FC_data),") and all_predictors (",NROW(all_predictors),") are not the same",sep=""))}
     
     #check categorical variable
     for (column in 1:NCOL(all_predictors))
