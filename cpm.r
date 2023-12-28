@@ -40,32 +40,32 @@ cpm.train=function(data,outcome,p=0.05)
   weights[r.mat< -neg.rcrit]=-1
   
   ##network models
-  ##positive model
-  if(NROW(which(weights==1))>1) ## proceed only if at least 2 edges are selected
-  {
-    pos.netstr=rowSums(data[,which(weights==1)])  
-    pos.netstr.coef=lm(outcome~pos.netstr)$coefficients
-  } else 
-  {
-    pos.netstr.coef=NA
-    cat("\nNone of edges are significantly and positively correlated with the outcome. The positive network model cannot be constructed\n")
-  }
+    #positive model
+    if(NROW(which(weights==1))>1) ## proceed only if at least 2 edges are selected
+    {
+      pos.netstr=rowSums(data[,which(weights==1)])  
+      pos.netstr.coef=lm(outcome~pos.netstr)$coefficients
+    } else 
+    {
+      pos.netstr.coef=NA
+      cat("\nNone of edges are significantly and positively correlated with the outcome. The positive network model cannot be constructed\n")
+    }
   
-  ##negative model  
-  if(NROW(which(weights==-1))>1) ## proceed only if at least 2 edges are selected
-  {
-    neg.netstr=rowSums(data[,which(weights==-1)])  
-    neg.netstr.coef=lm(outcome~neg.netstr)$coefficients
-  } else
-  {
-    neg.netstr.coef=NA
-    cat("\nNone of edges are significantly and negatively correlated with the outcome. The negative network model cannot be constructed\n")
-  } 
-  
-  ## positive + negative model  
-  if(NROW(which(weights==-1))>1 & NROW(which(weights==1))>1) ## proceed only if at least 2 edges are selected in each of the earlier models
-  {both.netstr.coef=lm(outcome~pos.netstr+neg.netstr)$coefficients} 
-  else {both.netstr.coef=NA}
+    #negative model  
+    if(NROW(which(weights==-1))>1) ## proceed only if at least 2 edges are selected
+    {
+      neg.netstr=rowSums(data[,which(weights==-1)])  
+      neg.netstr.coef=lm(outcome~neg.netstr)$coefficients
+    } else
+    {
+      neg.netstr.coef=NA
+      cat("\nNone of edges are significantly and negatively correlated with the outcome. The negative network model cannot be constructed\n")
+    } 
+    
+    # positive + negative model  
+    if(NROW(which(weights==-1))>1 & NROW(which(weights==1))>1) ## proceed only if at least 2 edges are selected in each of the earlier models
+    {both.netstr.coef=lm(outcome~pos.netstr+neg.netstr)$coefficients} 
+    else {both.netstr.coef=NA}
     
   ##listing objects to return 
   model=list(weights,pos.netstr.coef,neg.netstr.coef,both.netstr.coef)
