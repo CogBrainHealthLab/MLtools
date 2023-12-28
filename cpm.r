@@ -3,147 +3,137 @@
 
 ##################################################################################################################
 ##################################################################################################################
+##to train CPM models using a fixed p value threshold
 
 cpm.train=function(data,outcome,p=0.05)
 {
   ##checks
-  #pvalues
-  data=data.matrix(data)
-  if(length(p)==1)
-  {
-    p.posneg=c(p,p)
-  } else if (length(p)==2)
-  {
-    p.posneg=p
-  } else 
-  {
-    stop("Only one or two pvalues should be entered")
-  }
-  #number of rows match
-  if(NROW(data)!=NROW(outcome))
-  {
-    stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))
-  }
-  #missing data
-  idx.missing=which(is.na(outcome)==T)
-  if(NROW(idx.missing)>0)
-  {
-    cat(paste("\n",NROW(idx.missing)," missing values are detected in the outcome variable. Subjects with missing values will be excluded in the training procedure\n",sep=""))
-    data=data[-idx.missing,]
-    outcome=outcome[-idx.missing]
-  }
+    #pvalues
+    data=data.matrix(data)
+    if(length(p)==1)  {p.posneg=c(p,p)} 
+    else if (length(p)==2)  {p.posneg=p} 
+    else {stop("Only one or two pvalues should be entered")}
+    
+    #number of rows match
+    if(NROW(data)!=NROW(outcome))  {stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))}
   
-  ## feature selection
-  weights=rep(0,NCOL(data))
+    #missing data
+    idx.missing=which(is.na(outcome)==T)
+    if(NROW(idx.missing)>0)
+    {
+      cat(paste("\n",NROW(idx.missing)," missing values are detected in the outcome variable. Subjects with missing values will be excluded in the training procedure\n",sep=""))
+      data=data[-idx.missing,]
+      outcome=outcome[-idx.missing]
+    }
+  
+  ##feature selection
+    #critical values 
+    pos.tcrit=qt((p.posneg[1]/2), NROW(outcome)-2, lower=FALSE)
+    neg.tcrit=qt((p.posneg[2]/2), NROW(outcome)-2, lower=FALSE)
+    pos.rcrit=sqrt(pos.tcrit^2/(pos.tcrit^2+NROW(outcome)-2))
+    neg.rcrit=sqrt(neg.tcrit^2/(neg.tcrit^2+NROW(outcome)-2))
 
-  pos.tcrit=qt((p.posneg[1]/2), NROW(outcome)-2, lower=FALSE)
-  neg.tcrit=qt((p.posneg[2]/2), NROW(outcome)-2, lower=FALSE)
-  pos.rcrit=sqrt(pos.tcrit^2/(pos.tcrit^2+NROW(outcome)-2))
-  neg.rcrit=sqrt(neg.tcrit^2/(neg.tcrit^2+NROW(outcome)-2))
-  
-  r.mat=cor(data,outcome)
-  
-  weights[r.mat> pos.rcrit]=1
-  weights[r.mat< -neg.rcrit]=-1
+    #binarizing pearsons r values
+    r.mat=cor(data,outcome)
+    weights=rep(0,NCOL(data))
+    weights[r.mat> pos.rcrit]=1
+    weights[r.mat< -neg.rcrit]=-1
 
-  ## network models
-  if(NROW(which(weights==1))>1)
-  {
-    pos.netstr=rowSums(data[,which(weights==1)])  
-    pos.netstr.coef=lm(outcome~pos.netstr)$coefficients
-  } else 
-  {
-    pos.netstr.coef=NA
-    cat("\nNone of edges are significantly and positively correlated with the outcome. The positive network model cannot be constructed\n")
-  }
-  if(NROW(which(weights==-1))>1)
-  {
-    neg.netstr=rowSums(data[,which(weights==-1)])  
-    neg.netstr.coef=lm(outcome~neg.netstr)$coefficients
-  } else
-  {
-    neg.netstr.coef=NA
-    cat("\nNone of edges are significantly and negatively correlated with the outcome. The negative network model cannot be constructed\n")
-  }
-  if(NROW(which(weights==-1))>1 & NROW(which(weights==1))>1)
-  {
-    both.netstr.coef=lm(outcome~pos.netstr+neg.netstr)$coefficients
-  } else {both.netstr.coef=NA}
+  ##network models
+    ##positive model
+    if(NROW(which(weights==1))>1) ## proceed only if at least 2 edges are selected
+    {
+      pos.netstr=rowSums(data[,which(weights==1)])  
+      pos.netstr.coef=lm(outcome~pos.netstr)$coefficients
+    } else 
+    {
+      pos.netstr.coef=NA
+      cat("\nNone of edges are significantly and positively correlated with the outcome. The positive network model cannot be constructed\n")
+    }
+    
+    ##negative model  
+    if(NROW(which(weights==-1))>1) ## proceed only if at least 2 edges are selected
+    {
+      neg.netstr=rowSums(data[,which(weights==-1)])  
+      neg.netstr.coef=lm(outcome~neg.netstr)$coefficients
+    } else
+    {
+      neg.netstr.coef=NA
+      cat("\nNone of edges are significantly and negatively correlated with the outcome. The negative network model cannot be constructed\n")
+    
+    ## positive + negative model  
+    if(NROW(which(weights==-1))>1 & NROW(which(weights==1))>1) ## proceed only if at least 2 edges are selected in each of the earlier models
+    {
+      both.netstr.coef=lm(outcome~pos.netstr+neg.netstr)$coefficients
+    } else {both.netstr.coef=NA}
+
+  ##listing objects to return 
   model=list(weights,pos.netstr.coef,neg.netstr.coef,both.netstr.coef)
   names(model)=c("weights","pos.network.coef","neg.network.coef","both.network.coef")
   return(model)
 }
 ##################################################################################################################
 ##################################################################################################################
-
+##to predict scores from previously generated cpm.train() models
+  
 cpm.predict=function(model,test.data, network="both")
 {
   test.data=data.matrix(test.data)
   ##checks
-  if(NROW(model$weights)!=NCOL(test.data))
-  {
-    stop(paste("\nThe number of predictors in the training data (",NROW(model$weights),") and testing data(",NCOL(test.data),")do not match!\n",sep=""))
-  }
-  if(network=="positive")
-  {
-    predscore=rowSums(test.data[,which(model$weights==1)])*model$pos.network.coef[2]+model$pos.network.coef[1]
-  } else if(network=="negative")
-  {
-    predscore=rowSums(test.data[,which(model$weights==-1)])*model$neg.network.coef[2]+model$neg.network.coef[1]      
-  } else if(network=="both")
-  {
-    if(is.na(model$pos.network.coef)[1])
-    {
-      positive=rep(NA,NROW(test.data))
-    } else {positive=rowSums(test.data[,which(model$weights==1)])*model$pos.network.coef[2]+model$pos.network.coef[1]}
+    #number of rows match
+    if(NROW(model$weights)!=NCOL(test.data))
+    {stop(paste("\nThe number of predictors in the training data (",NROW(model$weights),") and testing data(",NCOL(test.data),")do not match!\n",sep=""))}
+
+  ##select model {compute predscore}
+  if(network=="positive")  {predscore=rowSums(test.data[,which(model$weights==1)])*model$pos.network.coef[2]+model$pos.network.coef[1]} 
+  else if(network=="negative")  {predscore=rowSums(test.data[,which(model$weights==-1)])*model$neg.network.coef[2]+model$neg.network.coef[1]} 
+  else if(network=="both")  
+  {  
+    #check if positive and negative models are valid, and proceed accordingly
+    if(is.na(model$pos.network.coef)[1])  {positive=rep(NA,NROW(test.data))} 
+    else {positive=rowSums(test.data[,which(model$weights==1)])*model$pos.network.coef[2]+model$pos.network.coef[1]}
     
-    if(is.na(model$neg.network.coef)[1])
-    {
-      negative=rep(NA,NROW(test.data))
-    } else {negative=rowSums(test.data[,which(model$weights==-1)])*model$neg.network.coef[2]+model$neg.network.coef[1]}
+    if(is.na(model$neg.network.coef)[1])  {negative=rep(NA,NROW(test.data))} 
+    else {negative=rowSums(test.data[,which(model$weights==-1)])*model$neg.network.coef[2]+model$neg.network.coef[1]}
     
-    if(is.na(model$pos.network.coef)[1] | is.na(model$neg.network.coef)[1])
-    {
-      both=rep(NA,NROW(test.data))
-    } else
-    {
-      both=rowSums(test.data[,which(model$weights==1)])*model$both.network.coef[2]+rowSums(test.data[,which(model$weights==-1)])*model$both.network.coef[3]+model$both.network.coef[1]
-    }
+    if(is.na(model$pos.network.coef)[1] | is.na(model$neg.network.coef)[1])  {both=rep(NA,NROW(test.data))} 
+    else  {both=rowSums(test.data[,which(model$weights==1)])*model$both.network.coef[2]+rowSums(test.data[,which(model$weights==-1)])*model$both.network.coef[3]+model$both.network.coef[1]}
+    
     predscore=data.frame(positive,negative,both)
   }
   return(predscore)
 }
 ##################################################################################################################
 ##################################################################################################################
+##cross-validation procedure to identify optimal p values for subsequent use of cpm.train()
 
 cpm.train.cv=function(data,outcome,p,nfolds=5)
 { 
   data=data.matrix(data)
+  
   ##checks
-  #require packages
-  list.of.packages = c("caret")
-  new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+    #require packages
+    list.of.packages = c("caret")
+    new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
   
-  if(length(new.packages)) 
-  {
-    cat(paste("The following package(s) are required and will be installed:\n",new.packages,"\n"))
-    install.packages(new.packages)
-  }  
-  #number of rows match
-  if(NROW(data)!=NROW(outcome))
-  {
-    stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))
-  }
+    if(length(new.packages)) 
+    {
+      cat(paste("The following package(s) are required and will be installed:\n",new.packages,"\n"))
+      install.packages(new.packages)
+    }  
+    
+    #number of rows match
+    if(NROW(data)!=NROW(outcome))  {stop(paste("\nThe number of rows in the data (",NROW(data),") and outcome variable (",NROW(outcome),") do not match!\n",sep=""))}
   
-  #missing data
-  idx.missing=which(is.na(outcome)==T)
-  if(NROW(idx.missing)>0)
-  {
-    data=data[-idx.missing,]
-    outcome=outcome[-idx.missing]
-  }
+    #missing data
+    idx.missing=which(is.na(outcome)==T)
+    if(NROW(idx.missing)>0)
+    {
+      data=data[-idx.missing,]
+      outcome=outcome[-idx.missing]
+    }
   
-  #generate sequence of p-values to tune
+  #generate geometric sequence of p-values from distribution of p values in the data
   if(missing(p))
   {
     r_to_p=function(r)
@@ -151,7 +141,7 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
       t=(r*sqrt(NROW(outcome)-2))/(sqrt(1-(r^2)))
       return(2 * (1 - pt(abs(t), NROW(outcome)-2)))
     }
-    r.thresh=0.15
+    r.thresh=0.15 ##lower cutoff
     r.mat=cor(data,outcome)
     pos.r.mat=r.mat[r.mat>r.thresh]
     neg.r.mat=r.mat[r.mat< (-r.thresh)]
@@ -161,19 +151,23 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
     n.int=47
     
     p=matrix(NA,nrow =n.int-1, ncol=2)
+    #positive model
     pos.interval=NROW(pos.r.mat)/n.int
     for(iter in 1:(n.int-2))
     {
       p[iter+1,1]=r_to_p(pos.r.mat[round(pos.interval*iter)])  
     }
-    p[1,1]=r_to_p(r.thresh)
+    p[1,1]=r_to_p(r.thresh) #lower cutoff r=0.15
 
+    #positive model
     neg.interval=NROW(neg.r.mat)/n.int
     for(iter in 1:(n.int-2))
     {
       p[iter+1,2]=r_to_p(neg.r.mat[round(neg.interval*iter)])  
     }
-    p[1,2]=r_to_p(-r.thresh)  
+    p[1,2]=r_to_p(-r.thresh) #lower cutoff r=-0.15  
+
+    #selecting p values using a geometric step progression; steps become progressively smaller towards the end
     p=p[c(1,9,17,24,30,35,39,42,44,45),]
   }
   #check pvalues
