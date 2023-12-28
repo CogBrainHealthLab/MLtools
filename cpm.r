@@ -132,10 +132,6 @@ cpm.train=function(data,outcome,p=0.05)
       data=data[-idx.missing,]
       outcome=outcome[-idx.missing]
     }
-    #check pvalues
-    if(length(p)==1)  {stop("At least 2 p-values should be entered")} 
-    else if (NCOL(p)==1)  {p=cbind(p,p)}
-    
     ##generate geometric sequence of p-values from distribution of p values in the data
     if(missing(p))
     {
@@ -176,8 +172,12 @@ cpm.train=function(data,outcome,p=0.05)
       
       #selecting p values using a geometric step progression from the fixed-interval p values; steps become progressively smaller towards the end
       p=p[c(1,9,17,24,30,35,39,42,44,45),]
+    } else 
+    {  
+      #checks for user-defined p values
+      if(length(p)==1)  {stop("At least 2 p-values should be entered")} 
+      else if (NCOL(p)==1)  {p=cbind(p,p)}
     }
-    
     ##setup CV folds
     folds=caret::createFolds(outcome,k=nfolds)
     
