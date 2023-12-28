@@ -27,18 +27,18 @@ cpm.train=function(data,outcome,p=0.05)
     }
     
   ##feature selection
-  #critical values 
-  pos.tcrit=qt((p.posneg[1]/2), NROW(outcome)-2, lower=FALSE)
-  neg.tcrit=qt((p.posneg[2]/2), NROW(outcome)-2, lower=FALSE)
-  pos.rcrit=sqrt(pos.tcrit^2/(pos.tcrit^2+NROW(outcome)-2))
-  neg.rcrit=sqrt(neg.tcrit^2/(neg.tcrit^2+NROW(outcome)-2))
-  
-  #binarizing pearsons r values
-  r.mat=cor(data,outcome)
-  weights=rep(0,NCOL(data))
-  weights[r.mat> pos.rcrit]=1
-  weights[r.mat< -neg.rcrit]=-1
-  
+    #critical values 
+    pos.tcrit=qt((p.posneg[1]/2), NROW(outcome)-2, lower=FALSE)
+    neg.tcrit=qt((p.posneg[2]/2), NROW(outcome)-2, lower=FALSE)
+    pos.rcrit=sqrt(pos.tcrit^2/(pos.tcrit^2+NROW(outcome)-2))
+    neg.rcrit=sqrt(neg.tcrit^2/(neg.tcrit^2+NROW(outcome)-2))
+    
+    #binarizing pearsons r values
+    r.mat=cor(data,outcome)
+    weights=rep(0,NCOL(data))
+    weights[r.mat> pos.rcrit]=1
+    weights[r.mat< -neg.rcrit]=-1
+    
   ##network models
     #positive model
     if(NROW(which(weights==1))>1) ## proceed only if at least 2 edges are selected
