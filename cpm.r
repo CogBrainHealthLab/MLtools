@@ -132,15 +132,20 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
       data=data[-idx.missing,]
       outcome=outcome[-idx.missing]
     }
+    #check pvalues
+    if(length(p)==1)  {stop("At least 2 p-values should be entered")} 
+    else if (NCOL(p)==1)  {p=cbind(p,p)}
   
-  #generate geometric sequence of p-values from distribution of p values in the data
+  ##generate geometric sequence of p-values from distribution of p values in the data
   if(missing(p))
   {
+    #converting r to p
     r_to_p=function(r)
     {
       t=(r*sqrt(NROW(outcome)-2))/(sqrt(1-(r^2)))
       return(2 * (1 - pt(abs(t), NROW(outcome)-2)))
     }
+    
     r.thresh=0.15 ##lower cutoff
     r.mat=cor(data,outcome)
     pos.r.mat=r.mat[r.mat>r.thresh]
@@ -149,41 +154,33 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
     neg.r.mat=neg.r.mat[order(-neg.r.mat)]
    
     n.int=47
-    
-    p=matrix(NA,nrow =n.int-1, ncol=2)
-    #positive model
-    pos.interval=NROW(pos.r.mat)/n.int
-    for(iter in 1:(n.int-2))
-    {
-      p[iter+1,1]=r_to_p(pos.r.mat[round(pos.interval*iter)])  
-    }
-    p[1,1]=r_to_p(r.thresh) #lower cutoff r=0.15
 
-    #positive model
-    neg.interval=NROW(neg.r.mat)/n.int
-    for(iter in 1:(n.int-2))
-    {
-      p[iter+1,2]=r_to_p(neg.r.mat[round(neg.interval*iter)])  
-    }
-    p[1,2]=r_to_p(-r.thresh) #lower cutoff r=-0.15  
+    #iterating p values    
+    p=matrix(NA,nrow =n.int-1, ncol=2)
+    
+      #positive model
+      pos.interval=NROW(pos.r.mat)/n.int
+      for(iter in 1:(n.int-2))
+      {
+        p[iter+1,1]=r_to_p(pos.r.mat[round(pos.interval*iter)])  
+      }
+      p[1,1]=r_to_p(r.thresh) #lower cutoff r=0.15
+  
+      #positive model
+      neg.interval=NROW(neg.r.mat)/n.int
+      for(iter in 1:(n.int-2))
+      {
+        p[iter+1,2]=r_to_p(neg.r.mat[round(neg.interval*iter)])  
+      }
+      p[1,2]=r_to_p(-r.thresh) #lower cutoff r=-0.15  
 
     #selecting p values using a geometric step progression; steps become progressively smaller towards the end
     p=p[c(1,9,17,24,30,35,39,42,44,45),]
   }
-  #check pvalues
   
-  if(length(p)==1)
-   {
-     stop("At least 2 p-values should be entered")
-   } else if (NCOL(p)==1)
-   {
-     p=cbind(p,p)
-   }
-  
-  ##setup environment
+  ##setup CV folds
   folds=caret::createFolds(outcome,k=nfolds)
 
-  
   ##training
   rvals=matrix(NA,nrow=NROW(p),ncol=2)
   for(iter in 1:NROW(p))
