@@ -165,13 +165,13 @@ cpm.train=function(data,outcome,p=0.05)
           #negative model: iterating p values across intervals
           neg.interval=NROW(neg.r.mat)/n.int
           p[2:NROW(p),2]=r_to_p(neg.r.mat[round(mneg.interval*intervals)])  
-      
     } else 
     {  
       #checks for user-defined p values
       if(length(p)==1)  {stop("At least 2 p-values should be entered")} 
       else if (NCOL(p)==1)  {p=cbind(p,p)}
     }
+    
     ##setup CV folds
     folds=caret::createFolds(outcome,k=nfolds)
     
