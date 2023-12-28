@@ -107,9 +107,11 @@ cpm.train=function(data,outcome,p=0.05)
 ##################################################################################################################
 ##cross-validation procedure to identify optimal p values for subsequent use of cpm.train()
   
-  cpm.train.cv=function(data,outcome,p,nfolds=5)
+cpm.train.cv=function(data,outcome,p,nfolds=5)
   { 
-    data=data.matrix(data)
+    data=FC.train
+    outcome=age.train
+    nfolds=5
     
     ##checks
     #require packages
@@ -144,27 +146,32 @@ cpm.train=function(data,outcome,p=0.05)
       
       r.thresh=0.15 ##lower cutoff
       r.mat=cor(data,outcome)
+      
+      #separating p values for positive and negative rs
       pos.r.mat=r.mat[r.mat>r.thresh]
       neg.r.mat=r.mat[r.mat< (-r.thresh)]
-      pos.r.mat=pos.r.mat[order(pos.r.mat)]
-      neg.r.mat=neg.r.mat[order(-neg.r.mat)]
       
-      n.int=47
+      ##generating p values
+        #order distribution of p values in increasing magnitude
+        pos.r.mat=pos.r.mat[order(pos.r.mat)]
+        neg.r.mat=neg.r.mat[order(-neg.r.mat)]
       
-      ##generating p values    
-      p=matrix(NA,nrow=n.int-1, ncol=2)
-      p[1,]=c(r_to_p(r.thresh),r_to_p(-r.thresh))  ##first pair of p values set according to r=+/-0.15 (lower boundary)
-        
-        #selecting p values using a geometric step progression from the fixed-interval p values; steps become progressively smaller towards the end
+        #divide p values across 47 intervals
+        n.int=47 
+        pos.interval=NROW(pos.r.mat)/n.int
+        neg.interval=NROW(neg.r.mat)/n.int
+      
+        #select intervals from a geometric step progression; steps become progressively smaller
         intervals=c(1,9,17,24,30,35,39,42,44,45)   
+        p=matrix(NA,nrow=length(intervals)+1, ncol=2)
         
-          #positive model: iterating p values across intervals
-          pos.interval=NROW(pos.r.mat)/n.int
-          p[2:NROW(p),1]=r_to_p(pos.r.mat[round(pos.interval*intervals)])  
+        #first pair of p values set according to r=+/-0.15 (lower boundary)
+        p[1,]=c(r_to_p(r.thresh),r_to_p(-r.thresh))
+      
+        #iterating p values across geometric stepped intervals for positive and negative models
+        p[2:NROW(p),1]=r_to_p(pos.r.mat[round(pos.interval*intervals)])  
+        p[2:NROW(p),2]=r_to_p(neg.r.mat[round(neg.interval*intervals)])  
         
-          #negative model: iterating p values across intervals
-          neg.interval=NROW(neg.r.mat)/n.int
-          p[2:NROW(p),2]=r_to_p(neg.r.mat[round(mneg.interval*intervals)])  
     } else 
     {  
       #checks for user-defined p values
