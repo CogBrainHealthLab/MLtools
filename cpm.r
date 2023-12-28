@@ -162,7 +162,7 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
         neg.interval=NROW(neg.r.mat)/n.int
       
         #select intervals from a geometric step progression; steps become progressively smaller
-        intervals=c(1,9,17,24,30,35,39,42,44,45)   
+        intervals=c(9,17,24,30,35,39,42,44,45)   
         p=matrix(NA,nrow=length(intervals)+1, ncol=2)
         
         #first pair of p values set according to r=+/-0.15 (lower boundary)
