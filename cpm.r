@@ -151,27 +151,21 @@ cpm.train=function(data,outcome,p=0.05)
       
       n.int=47
       
-      #generating p values    
-      p=matrix(NA,nrow =n.int-1, ncol=2)
+      ##generating p values    
+      p=matrix(NA,nrow=n.int-1, ncol=2)
+      p[1,]=c(r_to_p(r.thresh),r_to_p(-r.thresh))  ##first pair of p values set according to r=+/-0.15 (lower boundary)
+        
+        #selecting p values using a geometric step progression from the fixed-interval p values; steps become progressively smaller towards the end
+        intervals=c(1,9,17,24,30,35,39,42,44,45)   
+        
+          #positive model: iterating p values across intervals
+          pos.interval=NROW(pos.r.mat)/n.int
+          p[2:NROW(p),1]=r_to_p(pos.r.mat[round(pos.interval*intervals)])  
+        
+          #negative model: iterating p values across intervals
+          neg.interval=NROW(neg.r.mat)/n.int
+          p[2:NROW(p),2]=r_to_p(neg.r.mat[round(mneg.interval*intervals)])  
       
-      #positive model: iterating p values across fixed intervals
-      pos.interval=NROW(pos.r.mat)/n.int
-      for(iter in 1:(n.int-2))
-      {
-        p[iter+1,1]=r_to_p(pos.r.mat[round(pos.interval*iter)])  
-      }
-      p[1,1]=r_to_p(r.thresh) #lower cutoff r=0.15
-      
-      #negative model: iterating p values across fixed intervals
-      neg.interval=NROW(neg.r.mat)/n.int
-      for(iter in 1:(n.int-2))
-      {
-        p[iter+1,2]=r_to_p(neg.r.mat[round(neg.interval*iter)])  
-      }
-      p[1,2]=r_to_p(-r.thresh) #lower cutoff r=-0.15  
-      
-      #selecting p values using a geometric step progression from the fixed-interval p values; steps become progressively smaller towards the end
-      p=p[c(1,9,17,24,30,35,39,42,44,45),]
     } else 
     {  
       #checks for user-defined p values
