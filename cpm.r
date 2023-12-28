@@ -155,10 +155,10 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
    
     n.int=47
 
-    #iterating p values    
+    #generating p values    
     p=matrix(NA,nrow =n.int-1, ncol=2)
     
-      #positive model
+      #positive model: iterating p values across fixed intervals
       pos.interval=NROW(pos.r.mat)/n.int
       for(iter in 1:(n.int-2))
       {
@@ -166,7 +166,7 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
       }
       p[1,1]=r_to_p(r.thresh) #lower cutoff r=0.15
   
-      #positive model
+      #negative model: iterating p values across fixed intervals
       neg.interval=NROW(neg.r.mat)/n.int
       for(iter in 1:(n.int-2))
       {
@@ -174,7 +174,7 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
       }
       p[1,2]=r_to_p(-r.thresh) #lower cutoff r=-0.15  
 
-    #selecting p values using a geometric step progression; steps become progressively smaller towards the end
+    #selecting p values using a geometric step progression from the fixed-interval p values; steps become progressively smaller towards the end
     p=p[c(1,9,17,24,30,35,39,42,44,45),]
   }
   
@@ -182,41 +182,37 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
   folds=caret::createFolds(outcome,k=nfolds)
 
   ##training
+  
   rvals=matrix(NA,nrow=NROW(p),ncol=2)
   for(iter in 1:NROW(p))
     {
       p.iter=p[iter,]    
       for (fold in 1:length(folds))
       {
+        #leaving a fold out
         train_outcome=outcome[-folds[[fold]]]
         train_dat=data[-folds[[fold]],]
+        
+        #training the CPM and applying model to predict scores
         train.mod=cpm.train(data = train_dat,outcome = train_outcome,p=p.iter)
         predscores.fold=cpm.predict(train.mod, test.dat=data[folds[[fold]],])
-        if(fold==1)
-        {
-          predscores.all=predscores.fold
-        } else
-        {
-          predscores.all=rbind(predscores.all,predscores.fold)
-        }
-      }      
-      if(anyNA(predscores.all[,1]))
-      {
-        pos.net.r=NA  
-      } else {pos.net.r=cor(outcome[unlist(folds)],predscores.all[,1])}
-      
-      if(anyNA(predscores.all[,2]))
-      {
-        neg.net.r=NA  
-      } else {neg.net.r=cor(outcome[unlist(folds)],predscores.all[,2])}
 
+        #saving the scores from each fold to a single vector
+        if(fold==1)  {predscores.all=predscores.fold} 
+        else  {predscores.all=rbind(predscores.all,predscores.fold)}
+      }      
+      #check if positive and negative models are valid, and proceed accordingly
+      if(anyNA(predscores.all[,1]))  {pos.net.r=NA} 
+      else {pos.net.r=cor(outcome[unlist(folds)],predscores.all[,1])}
+      
+      if(anyNA(predscores.all[,2]))  {neg.net.r=NA} 
+      else {neg.net.r=cor(outcome[unlist(folds)],predscores.all[,2])}
+
+      #saving the r values for the iteration
       rvals[iter,]=c(pos.net.r,neg.net.r)
-  }
-  r.pos.min.idx=which(rvals[,1]==max(rvals[,1],na.rm = T))
-  r.neg.min.idx=which(rvals[,2]==max(rvals[,2],na.rm = T))
-  results=list(c(p[r.pos.min.idx,1],p[r.neg.min.idx,2]),rvals,p)
-  names(results)=c("opt.pvals","results","pvals")
+    }
   
+  #inform user if p values are too small such that no edges are selected; only if user-defined p values are entered  
   idx.NA.pos=which(is.na(rvals[,1]))
   if(length(idx.NA.pos)>0)
   {cat(paste("\nNote: No positive edges were selected when the p value of ",p[min(idx.NA.pos)]," or smaller was used", sep=""))}
@@ -225,16 +221,24 @@ cpm.train.cv=function(data,outcome,p,nfolds=5)
   if(length(idx.NA.neg)>0)
   {cat(paste("\nNote: No negative edges were selected when the p value of ",p[min(idx.NA.neg)]," or smaller was used", sep=""))}
 
+  #identify the indices for p-values that produce the most accurate predictions
+  r.pos.min.idx=which(rvals[,1]==max(rvals[,1],na.rm = T))
+  r.neg.min.idx=which(rvals[,2]==max(rvals[,2],na.rm = T))
+
+  #listing out objects to return
+  results=list(c(p[r.pos.min.idx,1],p[r.neg.min.idx,2]),rvals,p)
+  names(results)=c("opt.pvals","results","pvals")
+
   return(results)
 }
 ##################################################################################################################
 ##################################################################################################################
-
+##Using the lesion approach (leave-one-network out) for CPM
 cpm.lesion=function(train.data,test.data,train.outcome, test.outcome,p)
 {
-  #define variables and label parameters
   data=data.matrix(dat_FC)
 
+  ##atlas selection
   labels.url=c("https://github.com/CogBrainHealthLab/VizConnectome/blob/main/labels/labelsSC_AAL90.csv?raw=TRUE",
                "https://github.com/CogBrainHealthLab/VizConnectome/blob/main/labels/labelsFC_schaefer119.csv?raw=TRUE",
                "https://github.com/CogBrainHealthLab/VizConnectome/blob/main/labels/labelsFC_schaefer219.csv?raw=TRUE",
@@ -243,40 +247,42 @@ cpm.lesion=function(train.data,test.data,train.outcome, test.outcome,p)
   edge_lengths=c(4005,7021,23871,30135)
   
   if(is.na(match(NCOL(data),edge_lengths)))
-  {
-    stop("The number of columns in the input matrix is not consistent with any of the recognized parcellation schemes. The input matrix should contain 4005, 7021, 23871 or 30135 columns")      
-  } else
-  {
-    atlas=match(NCOL(data),edge_lengths)
-  }
-  
+  {stop("The number of columns in the input matrix is not consistent with any of the recognized parcellation schemes. The input matrix should contain 4005, 7021, 23871 or 30135 columns")} 
+  else  {atlas=match(NCOL(data),edge_lengths)}
+
+  ##preparing atlas labels for removing networks of edges
   label=read.csv(labels.url[atlas])
   nnode=NROW(label)
   networks.list=data.frame(unique(cbind(as.numeric(label$region),label$regionlabel)))
   names(networks.list)=c("netno","network.name")
   networks.list=networks.list[order(networks.list$netno),]
-  
+
+  ##CPM 
   results=matrix(NA,nrow=NROW(networks.list)+1,ncol=4)
-  #CPM (all networks)
-  
-  model.allnetworks=cpm.train(data=train.data, outcome=train.outcome, p=p)
-  pred.allnetwork=cpm.predict(model = model.allnetworks, test.data=test.data)
-  results[1,2:4]=cor(test.outcome,pred.allnetwork)
-  #CPM (leave-one-network out)
-  
-  for (netno in 1:NROW(networks.list))
-  {
-    FC_matrix=array(rep(NA,nnode^2),dim=c(nnode,nnode))
-    FC_matrix[upper.tri(FC_matrix, diag=FALSE)] = 1:edge_lengths[atlas]
-    FC_matrix.1net=FC_matrix
-    FC_matrix.1net[which(label$region==netno),which(label$region==netno)]=NA
-    edge.column=FC_matrix.1net[upper.tri(FC_matrix.1net, diag=FALSE)]
-    remove.idx=which(is.na(edge.column)==T)
     
-    model.1net=cpm.train(data=train.data[,-remove.idx], outcome=train.outcome, p=p)
-    pred.1net=cpm.predict(model = model.1net, test.data=test.data[,-remove.idx])
-    results[netno+1,2:4]=cor(test.outcome,pred.1net)
-  }
+    #training the CPM (without any network exclusions) and applying model to predict scores
+    model.allnetworks=cpm.train(data=train.data, outcome=train.outcome, p=p)
+    pred.allnetwork=cpm.predict(model = model.allnetworks, test.data=test.data)
+    results[1,2:4]=cor(test.outcome,pred.allnetwork)
+    
+    #CPM with one network removed each time
+    for (netno in 1:NROW(networks.list))
+    {
+      #identifying indice of edges to remove
+      FC_matrix=array(rep(NA,nnode^2),dim=c(nnode,nnode))
+      FC_matrix[upper.tri(FC_matrix, diag=FALSE)] = 1:edge_lengths[atlas]
+      FC_matrix.1net=FC_matrix
+      FC_matrix.1net[which(label$region==netno),which(label$region==netno)]=NA
+      edge.column=FC_matrix.1net[upper.tri(FC_matrix.1net, diag=FALSE)]
+      remove.idx=which(is.na(edge.column)==T)
+
+      #training the CPM and applying model to predict scores
+      model.1net=cpm.train(data=train.data[,-remove.idx], outcome=train.outcome, p=p)
+      pred.1net=cpm.predict(model = model.1net, test.data=test.data[,-remove.idx])
+      results[netno+1,2:4]=cor(test.outcome,pred.1net)
+    }
+
+  ##saving results in a data.frame object for returning
   results[1,1]="none removed"
   results[c(2:(NROW(networks.list)+1)),1]=paste("removed",networks.list$network.name, sep=" ")
   results=data.frame(results)
