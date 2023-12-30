@@ -113,8 +113,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     for (perm in 1:nperm)  {permseq[,perm]=sample.int(NROW(all_predictors))}
     
     #activate parallel processing
-    cl=parallel::makeCluster(nthread)
-    doParallel::registerDoParallel(cl)
+    doParallel::registerDoParallel(nthread)
     `%dopar%` = foreach::`%dopar%`
     
     #progress bar
