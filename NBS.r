@@ -88,6 +88,8 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
       IV_of_interest=IV_of_interest[-idxF]
       FC_data=FC_data[-idxF,]
     }
+    #collinearity check
+    collinear.check(all_predictors)
   
   ##unpermuted model
     mod=lm(FC_data~data.matrix(all_predictors))
