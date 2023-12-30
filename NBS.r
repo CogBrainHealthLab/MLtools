@@ -114,8 +114,11 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     
     #activate parallel processing
     
-    env=foreach:::.foreachGlobals
-    rm(list=ls(name=env), pos=env)
+    unregister_dopar = function() {
+      env = foreach:::.foreachGlobals
+      rm(list=ls(name=env), pos=env)
+    }
+    unregister_dopar()
     
     cl=parallel::makeCluster(nthread)
     doParallel::registerDoParallel(nthread)
