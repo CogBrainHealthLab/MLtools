@@ -19,8 +19,7 @@ XGBlinear=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etar
   folds=caret::createFolds(outcome,k=5)
   bounds = list(lambda = lambdarange,alpha = alpharange,eta = etarange)
   dtrain = xgboost::xgb.DMatrix(data = train_dat, label = outcome)
-  cl = parallel::makeCluster(nthread)
-  doParallel::registerDoParallel(cl)
+  doParallel::registerDoParallel(nthread)
   parallel::clusterExport(cl,c('train_dat','outcome','folds'),envir = environment())
 
   obj_func = function(eta,lambda,alpha,nround) 
