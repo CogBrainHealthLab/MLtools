@@ -113,6 +113,11 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     for (perm in 1:nperm)  {permseq[,perm]=sample.int(NROW(all_predictors))}
     
     #activate parallel processing
+    
+    env=foreach:::.foreachGlobals
+    rm(list=ls(name=env), pos=env)
+    
+    cl=parallel::makeCluster(nthread)
     doParallel::registerDoParallel(nthread)
     `%dopar%` = foreach::`%dopar%`
     
