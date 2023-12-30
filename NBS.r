@@ -108,7 +108,8 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     nnodes=(0.5 + sqrt(0.5^2 - 4 * 0.5 * -NCOL(FC_data))) / (2 * 0.5)
     tcrit=qt(p/2, NROW(all_predictors)-2, lower=FALSE)
     orig.clust=cluster.stat(t.orig,nnodes,tcrit)
-  
+
+    remove(mod)
   ##permuted models
     #generating permutation sequences  
     permseq=matrix(NA, nrow=NROW(all_predictors), ncol=nperm)
@@ -138,10 +139,11 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
   
     max.netstr=foreach::foreach(perm=1:nperm, .combine="rbind",.export=c("extract.t","cluster.stat"), .options.snow = opts)  %dopar%
       {
-        all_predictors.permuted=all_predictors
-        mod.permuted=lm(FC_data~data.matrix(all_predictors.permuted)[permseq[,perm],])
+        mod.permuted=lm(FC_data~data.matrix(all_predictors)[permseq[,perm],])
         t.perm=extract.t(mod.permuted,colno+1)
         netstr=cluster.stat(t.perm,nnodes,tcrit)
+
+        remove(t.perm,mod.permuted)
         
         if(length(netstr)>2)  {max.netstr=c(max(netstr[,1]),max(netstr[,1]))} 
         else {max.netstr=netstr}
