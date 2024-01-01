@@ -110,13 +110,13 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     orig.clust=cluster.stat(t.orig,nnodes,tcrit)
 
     remove(mod)
+  
   ##permuted models
     #generating permutation sequences  
     permseq=matrix(NA, nrow=NROW(all_predictors), ncol=nperm)
     for (perm in 1:nperm)  {permseq[,perm]=sample.int(NROW(all_predictors))}
     
     #activate parallel processing
-    
     unregister_dopar = function() {
       env = foreach:::.foreachGlobals
       rm(list=ls(name=env), pos=env)
@@ -133,12 +133,13 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     progress=function(n) setTxtProgressBar(pb, n)
     opts=list(progress = progress)
   
-    #fitting permuted regression model and extracting max netstr in parallel streams
+    
     start=Sys.time()
     cat("\nEstimating permuted network strengths...\n")
   
     max.netstr=foreach::foreach(perm=1:nperm, .combine="rbind",.export=c("extract.t","cluster.stat"), .options.snow = opts)  %dopar%
       {
+        #fitting permuted regression model and extracting max netstr in parallel streams
         mod.permuted=lm(FC_data~data.matrix(all_predictors)[permseq[,perm],])
         t.perm=extract.t(mod.permuted,colno+1)
         netstr=cluster.stat(t.perm,nnodes,tcrit)
@@ -146,7 +147,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
         remove(t.perm,mod.permuted)
         
         if(length(netstr)>2)  {max.netstr=c(max(netstr[,1]),max(netstr[,1]))} 
-        else {max.netstr=netstr}
+        else {max.netstr=netstr} #if only one row of results is obtained, there is no need to use the max() function
         
         return(max.netstr)
       }
