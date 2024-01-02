@@ -99,7 +99,6 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
           } else if(length(unique(all_predictors[,column]))>2)  {cat(paste("The categorical variable '",colnames(all_predictors)[column],"' contains more than 2 levels, please code it into binarized dummy variables",sep=""))}
         }
       }
-  
     #collinearity check
     collinear.check(all_predictors)
   
