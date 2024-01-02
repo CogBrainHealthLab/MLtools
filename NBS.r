@@ -84,6 +84,14 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
       FC_data=FC_data[-idxF,]
     }
   
+    #identify contrast
+    for(colno in 1:(NCOL(all_predictors)+1))
+    {
+      if(colno==(NCOL(all_predictors)+1))  {stop("IV_of_interest is not contained within all_predictors")}
+        
+      if(class(all_predictors[,column]) != "integer" & class(all_predictors[,column]) != "numeric")  {if(identical(IV_of_interest,all_predictors[,colno]))  {break}} 
+      else  {if(identical(as.numeric(IV_of_interest),as.numeric(all_predictors[,colno])))  {break}}
+    }
     #check categorical variable
     for (column in 1:NCOL(all_predictors))
     {
@@ -104,15 +112,6 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
   
   ##unpermuted model
     mod=lm(FC_data~data.matrix(all_predictors))
-  
-    #identify contrast
-    for(colno in 1:(NCOL(all_predictors)+1))
-    {
-      if(colno==(NCOL(all_predictors)+1))
-      {stop("IV_of_interest is not contained within all_predictors")}
-      if(identical(IV_of_interest,all_predictors[,colno]))
-      {break}
-    }
   
     #define/init variables
     t.orig=extract.t(mod,colno+1)
