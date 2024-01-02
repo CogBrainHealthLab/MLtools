@@ -78,7 +78,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     idxF=which(complete.cases(all_predictors)==F)
     if(length(idxF)>0)
     {
-      cat(paste("all_predictors contains",length(idxF),"subjects with incomplete data. Subjects with incomplete data will be excluded in the current analysis"))
+      cat(paste("all_predictors contains",length(idxF),"subjects with incomplete data. Subjects with incomplete data will be excluded in the current analysis\n"))
       all_predictors=all_predictors[-idxF,]
       IV_of_interest=IV_of_interest[-idxF]
       FC_data=FC_data[-idxF,]
@@ -105,7 +105,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
       {
         if(length(unique(all_predictors[,column]))==2)
         {
-          cat(paste("The binary variable '",colnames(all_predictors)[column],"' will be recoded with ",unique(all_predictors[,column])[1],"=0 and ",unique(all_predictors[,column])[2],"=1 for the analysis",sep=""))
+          cat(paste("The binary variable '",colnames(all_predictors)[column],"' will be recoded with ",unique(all_predictors[,column])[1],"=0 and ",unique(all_predictors[,column])[2],"=1 for the analysis\n",sep=""))
         
           recode=rep(0,NROW(all_predictors))
           recode[all_predictors[,column]==unique(all_predictors[,column])[2]]=1
