@@ -73,12 +73,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
   
     #check if nrow is consistent for all_predictors and FC_data
     if(NROW(FC_data)!=NROW(all_predictors))  {stop(paste("The number of rows for FC_data (",NROW(FC_data),") and all_predictors (",NROW(all_predictors),") are not the same",sep=""))}
-    
-    #check categorical variable
-    for (column in 1:NCOL(all_predictors))
-    {
-      if(class(all_predictors[,column])  != "integer" & class(all_predictors[,column])  != "numeric")  {stop(paste(colnames(all_predictors)[column],"is not a numeric variable, please recode it into a numeric variable"))}
-    }
+  
     #incomplete data check
     idxF=which(complete.cases(all_predictors)==F)
     if(length(idxF)>0)
@@ -88,6 +83,23 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
       IV_of_interest=IV_of_interest[-idxF]
       FC_data=FC_data[-idxF,]
     }
+  
+    #check categorical variable
+      for (column in 1:NCOL(all_predictors))
+      {
+        if(class(all_predictors[,column]) != "integer" & class(all_predictors[,column]) != "numeric")
+        {
+          if(length(unique(all_predictors[,column]))==2)
+          {
+            cat(paste("The binary variable '",colnames(all_predictors)[column],"' will be recoded with ",unique(all_predictors[,column])[1],"=0 and ",unique(all_predictors[,column])[2],"=1 for the analysis",sep=""))
+        
+            recode=rep(0,NROW(all_predictors))
+            recode[all_predictors[,column]==unique(all_predictors[,column])[2]]=1
+            all_predictors[,column]=recode
+          } else if(length(unique(all_predictors[,column]))>2)  {cat(paste("The categorical variable '",colnames(all_predictors)[column],"' contains more than 2 levels, please code it into binarized dummy variables",sep=""))}
+        }
+      }
+  
     #collinearity check
     collinear.check(all_predictors)
   
