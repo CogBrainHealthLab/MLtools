@@ -83,8 +83,8 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
       IV_of_interest=IV_of_interest[-idxF]
       FC_data=FC_data[-idxF,]
     }
-  
-    #identify contrast
+
+    #check IV_of_interest
     for(colno in 1:(NCOL(all_predictors)+1))
     {
       if(colno==(NCOL(all_predictors)+1))  {stop("IV_of_interest is not contained within all_predictors")}
