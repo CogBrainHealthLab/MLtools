@@ -126,11 +126,13 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
   
   ##unpermuted model
     mod=lm(FC_data~data.matrix(all_predictors))
-  
+
+    mod.df=lm(data.matrix(FC_data)[,1]~data.matrix(all_predictors))
+    df=nrow(coefficients(summary(mod.df)))
     #define/init variables
     t.orig=extract.t(mod,colno+1)
     nnodes=(0.5 + sqrt(0.5^2 - 4 * 0.5 * -NCOL(FC_data))) / (2 * 0.5)
-    tcrit=qt(p/2, NROW(all_predictors)-2, lower=FALSE)
+    tcrit=qt(p/2, NROW(all_predictors)-df, lower=FALSE)
     orig.clust=cluster.stat(t.orig,nnodes,tcrit)
 
     remove(mod)
