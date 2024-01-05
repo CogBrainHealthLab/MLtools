@@ -61,6 +61,7 @@ cluster.stat=function(data,nnodes,tcrit)
 ############################################################################################################################
 NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.001)
 {
+  all_predictors=data.matrix(all_predictors)
   ##checks
     #check required packages
     list.of.packages = c("parallel", "doParallel","igraph","doSNOW","foreach")
@@ -114,7 +115,13 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
       }
     }
     #collinearity check
-    collinear.check(all_predictors)
+    cormat=cor(all_predictors,use = "pairwise.complete.obs")
+    cormat.0=cormat
+    cormat.0[cormat.0==1]=NA
+    if(max(abs(cormat.0),na.rm = T) >0.5)
+    {
+      warning(paste("correlations among variables in all_predictors are observed to be as high as ",round(max(abs(cormat.0),na.rm = T),2),", suggesting potential collinearity among predictors.\nAnalysis will continue...",sep=""))
+    }
   
   ##unpermuted model
     mod=lm(FC_data~data.matrix(all_predictors))
