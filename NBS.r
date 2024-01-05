@@ -24,10 +24,10 @@ extract.t=function(mod,row)
 cluster.stat=function(data,nnodes,tcrit)
 {
   ##thresholding
-  tstat.thresholded=data
-  tstat.thresholded[abs(data)<tcrit]=0
+  tstat.thresholded=abs(data)
+  tstat.thresholded[data<tcrit]=0
   tstat.thresholded.bin=tstat.thresholded
-  tstat.thresholded.bin[abs(tstat.thresholded.bin)>0]=1
+  tstat.thresholded.bin[tstat.thresholded.bin>0]=1
   
   ##setting up FCmatrices
   nnodes=(0.5 + sqrt(0.5^2 - 4 * 0.5 * -length(data))) / (2 * 0.5)
@@ -37,7 +37,7 @@ cluster.stat=function(data,nnodes,tcrit)
   ##thresholding
   FC_mat.weighted[upper.tri(FC_mat.weighted,diag = F)]=tstat.thresholded
   FC_mat.unweighted[upper.tri(FC_mat.unweighted,diag = F)]=tstat.thresholded.bin
-  FC_mat.weighted=abs(FC_mat.weighted)-(FC_mat.unweighted*tcrit)
+  FC_mat.weighted=FC_mat.weighted-(FC_mat.unweighted*tcrit)
   #clustering
   com=igraph::components(igraph::graph_from_adjacency_matrix(FC_mat.unweighted, mode='undirected', weighted=NULL))
   
