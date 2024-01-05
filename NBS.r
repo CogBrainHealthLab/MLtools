@@ -197,8 +197,8 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     colnames(orig.clust)=c("network no.","strength.unweighted","strength.weighted","pFWE.unweighted","pFWE.weighted")
   
     #objects to return
-    returnobj=list(orig.clust,t.orig, tcrit)
-    names(returnobj)=c("results","t.orig","tcrit")
+    returnobj=list(orig.clust,t.orig, tcrit,max.netstr)
+    names(returnobj)=c("results","t.orig","tcrit","max.netstr")
     return(returnobj)
 }
 ############################################################################################################################
