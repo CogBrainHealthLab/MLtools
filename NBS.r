@@ -62,6 +62,7 @@ cluster.stat=function(data,nnodes,tcrit)
 NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.001)
 {
   all_predictors=data.matrix(all_predictors)
+  FC_data=data.matrix(FC_data)
   ##checks
     #check required packages
     list.of.packages = c("parallel", "doParallel","igraph","doSNOW","foreach")
