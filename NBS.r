@@ -89,16 +89,28 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
   }
   
   #check IV_of_interest
-  for(colno in 1:(NCOL(all_predictors)+1))
+  if(NCOL(all_predictors)>1)
   {
-    if(colno==(NCOL(all_predictors)+1))  {stop("IV_of_interest is not contained within all_predictors")}
-    
+    for(colno in 1:(NCOL(all_predictors)+1))
+    {
+      if(colno==(NCOL(all_predictors)+1))  {stop("IV_of_interest is not contained within all_predictors")}
+      
+      if(class(IV_of_interest) != "integer" & class(IV_of_interest) != "numeric") 
+      {
+        if(identical(IV_of_interest,all_predictors[,colno]))  {break} 
+      } else 
+      {
+        if(identical(as.numeric(IV_of_interest),as.numeric(all_predictors[,colno])))  {break}
+      }
+    }
+  }  else
+  {
     if(class(IV_of_interest) != "integer" & class(IV_of_interest) != "numeric") 
     {
-      if(identical(IV_of_interest,all_predictors[,colno]))  {break} 
+      if(identical(IV_of_interest,all_predictors))  {break} 
     } else 
     {
-      if(identical(as.numeric(IV_of_interest),as.numeric(all_predictors[,colno])))  {break}
+      if(identical(as.numeric(IV_of_interest),as.numeric(all_predictors)))  {break}
     }
   }
   
