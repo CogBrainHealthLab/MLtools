@@ -95,7 +95,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     {
       if(colno==(NCOL(all_predictors)+1))  {stop("IV_of_interest is not contained within all_predictors")}
       
-      if(!suppressWarnings(all(!is.na(as.numeric(as.character(IV_of_interest))))))
+      if(class(IV_of_interest) != "integer" & class(IV_of_interest) != "numeric") 
       {
         if(identical(IV_of_interest,all_predictors[,colno]))  {break} 
       } else 
@@ -105,7 +105,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     }
   }  else
   {
-    if(!suppressWarnings(all(!is.na(as.numeric(as.character(IV_of_interest))))))
+    if(class(IV_of_interest) != "integer" & class(IV_of_interest) != "numeric") 
     {
       if(identical(IV_of_interest,all_predictors))  {colno=1} 
       else  {stop("IV_of_interest is not contained within all_predictors")}
@@ -116,12 +116,12 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     }
   }
   
-  #check and recode categorical variable
+  #check categorical variable
   if(NCOL(all_predictors)>1)
   {
     for (column in 1:NCOL(all_predictors))
     {
-      if(!suppressWarnings(all(!is.na(as.numeric(as.character(all_predictors[,column]))))))
+      if(class(all_predictors[,column]) != "integer" & class(all_predictors[,column]) != "numeric")
       {
         if(length(unique(all_predictors[,column]))==2)
         {
@@ -136,7 +136,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     }
   } else
   {
-    if(!suppressWarnings(all(!is.na(as.numeric(as.character(all_predictors))))))
+    if (!suppressWarnings(all(!is.na(as.numeric(as.character(all_predictors)))))) 
     {
       if(length(unique(all_predictors))==2)
       {
@@ -176,8 +176,8 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
   ##permuted models
   #generating permutation sequences  
   permseq=matrix(NA, nrow=NROW(all_predictors), ncol=nperm)
-  for (perm in 1:nperm)  {permseq[,perm]=sample.int(NROW(all_predictors))}
-  
+  for (perm in 1:nperm)  {permseq[,perm]=sample(1:NROW(all_predictors))}
+
   #activate parallel processing
   unregister_dopar = function() {
     env = foreach:::.foreachGlobals
@@ -208,7 +208,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
       
       remove(t.perm,mod.permuted)
       
-      if(length(netstr)>2)  {max.netstr=c(max(netstr[,1]),max(netstr[,1]))} 
+      if(length(netstr)>2)  {max.netstr=c(max(netstr[,1]),max(netstr[,2]))} 
       else {max.netstr=netstr} #if only one row of results is obtained, there is no need to use the max() function
       
       return(max.netstr)
@@ -225,8 +225,8 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
   #thresholding clusters using permuted null distribution
   for(row in 1:nrow(orig.clust))
   {
-    orig.clust[row,3]=length(which(max.netstr[,1]>orig.clust[row,1]))/nperm
-    orig.clust[row,4]=length(which(max.netstr[,2]>orig.clust[row,2]))/nperm
+    orig.clust[row,3]=sum(max.netstr[,1] > orig.clust[row,1])/nperm
+    orig.clust[row,4]=sum(max.netstr[,2] > orig.clust[row,2])/nperm
   }
   
   #formatting results table
