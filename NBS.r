@@ -136,7 +136,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     }
   } else
   {
-    if(class(all_predictors) != "integer" & class(all_predictors) != "numeric")
+    if (!suppressWarnings(all(!is.na(as.numeric(as.character(all_predictors))))))
     {
       if(length(unique(all_predictors))==2)
       {
