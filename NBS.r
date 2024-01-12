@@ -95,7 +95,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     {
       if(colno==(NCOL(all_predictors)+1))  {stop("IV_of_interest is not contained within all_predictors")}
       
-      if(class(IV_of_interest) != "integer" & class(IV_of_interest) != "numeric") 
+      if(!suppressWarnings(all(!is.na(as.numeric(as.character(IV_of_interest))))))
       {
         if(identical(IV_of_interest,all_predictors[,colno]))  {break} 
       } else 
@@ -105,7 +105,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     }
   }  else
   {
-    if(class(IV_of_interest) != "integer" & class(IV_of_interest) != "numeric") 
+    if(!suppressWarnings(all(!is.na(as.numeric(as.character(IV_of_interest))))))
     {
       if(identical(IV_of_interest,all_predictors))  {colno=1} 
       else  {stop("IV_of_interest is not contained within all_predictors")}
@@ -116,12 +116,12 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     }
   }
   
-  #check categorical variable
+  #check and recode categorical variable
   if(NCOL(all_predictors)>1)
   {
     for (column in 1:NCOL(all_predictors))
     {
-      if(class(all_predictors[,column]) != "integer" & class(all_predictors[,column]) != "numeric")
+      if(!suppressWarnings(all(!is.na(as.numeric(as.character(all_predictors[,column]))))))
       {
         if(length(unique(all_predictors[,column]))==2)
         {
@@ -136,7 +136,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     }
   } else
   {
-    if (!suppressWarnings(all(!is.na(as.numeric(as.character(all_predictors))))))
+    if(!suppressWarnings(all(!is.na(as.numeric(as.character(all_predictors))))))
     {
       if(length(unique(all_predictors))==2)
       {
