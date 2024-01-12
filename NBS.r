@@ -105,12 +105,15 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
     }
   }  else
   {
+    colno=1
     if(class(IV_of_interest) != "integer" & class(IV_of_interest) != "numeric") 
     {
       if(identical(IV_of_interest,all_predictors))  {break} 
-    } else 
+      else  {stop("IV_of_interest is not contained within all_predictors")}
+    } else
     {
       if(identical(as.numeric(IV_of_interest),as.numeric(all_predictors)))  {break}
+      else  {stop("IV_of_interest is not contained within all_predictors")}
     }
   }
   
@@ -149,13 +152,16 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
   }
   
   #collinearity check
-  cormat=cor(all_predictors,use = "pairwise.complete.obs")
-  cormat.0=cormat
-  cormat.0[cormat.0==1]=NA
-  if(max(abs(cormat.0),na.rm = T) >0.5)
-  {
-    warning(paste("correlations among variables in all_predictors are observed to be as high as ",round(max(abs(cormat.0),na.rm = T),2),", suggesting potential collinearity among predictors.\nAnalysis will continue...",sep=""))
-  }
+  if(NCOL(all_predictors)>1)
+    {
+      cormat=cor(all_predictors,use = "pairwise.complete.obs")
+      cormat.0=cormat
+      cormat.0[cormat.0==1]=NA
+      if(max(abs(cormat.0),na.rm = T) >0.5)
+      {
+        warning(paste("correlations among variables in all_predictors are observed to be as high as ",round(max(abs(cormat.0),na.rm = T),2),", suggesting potential collinearity among predictors.\nAnalysis will continue...",sep=""))
+      }  
+    }
   
   ##unpermuted model
   mod=.lm.fit(y = FC_data,x=data.matrix(cbind(1,all_predictors)))
