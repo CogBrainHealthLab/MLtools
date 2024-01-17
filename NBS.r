@@ -243,7 +243,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
 ############################################################################################################################
 extract.edges=function(NBS.obj,clust.no=1)
 {
-  nnodes=length(NBS.obj$t.orig)
+  nnodes=(0.5 + sqrt(0.5^2 - 4 * 0.5 * -length(NBS.obj$t.orig))) / (2 * 0.5)
   ##recode all p="<0.**" into 0 for subsequent thresholding
   if(is.character(NBS.obj$results[,4]))
   {
@@ -266,7 +266,7 @@ extract.edges=function(NBS.obj,clust.no=1)
   FC_mat.unweighted=matrix(0,nrow=nnodes,ncol=nnodes)
   FC_mat.weighted=matrix(0,nrow=nnodes,ncol=nnodes)
   
-  FC_mat.weighted[upper.tri(FC_mat.weighted,diag = F)]=tstat.thresholded-(tstat.thresholded.bin*tcrit) ## subtracting tcrit values to be consist with NBR::nbr_lm()
+  FC_mat.weighted[upper.tri(FC_mat.weighted,diag = F)]=tstat.thresholded-(tstat.thresholded.bin*NBS.obj$) ## subtracting tcrit values to be consist with NBR::nbr_lm()
   FC_mat.unweighted[upper.tri(FC_mat.unweighted,diag = F)]=tstat.thresholded.bin
   
   ##clustering
