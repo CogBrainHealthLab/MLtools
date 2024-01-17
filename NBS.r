@@ -243,6 +243,7 @@ NBS=function(all_predictors,IV_of_interest, FC_data, nperm=50, nthread=1, p=0.00
 ############################################################################################################################
 extract.edges=function(NBS.obj,clust.no=1)
 {
+  nnodes=length(NBS.obj$t.orig)
   ##recode all p="<0.**" into 0 for subsequent thresholding
   if(is.character(NBS.obj$results[,4]))
   {
