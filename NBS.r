@@ -266,7 +266,7 @@ extract.edges=function(NBS.obj,clust.no=1)
   FC_mat.unweighted=matrix(0,nrow=nnodes,ncol=nnodes)
   FC_mat.weighted=matrix(0,nrow=nnodes,ncol=nnodes)
   
-  FC_mat.weighted[upper.tri(FC_mat.weighted,diag = F)]=tstat.thresholded-(tstat.thresholded.bin*NBS.obj$) ## subtracting tcrit values to be consist with NBR::nbr_lm()
+  FC_mat.weighted[upper.tri(FC_mat.weighted,diag = F)]=tstat.thresholded-(tstat.thresholded.bin*NBS.obj$tcrit) ## subtracting tcrit values to be consist with NBR::nbr_lm()
   FC_mat.unweighted[upper.tri(FC_mat.unweighted,diag = F)]=tstat.thresholded.bin
   
   ##clustering
