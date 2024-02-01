@@ -271,7 +271,7 @@ extract.edges=function(NBS.obj,clust.no=1)
   
   ##clustering
   com=igraph::components(igraph::graph_from_adjacency_matrix(FC_mat.unweighted, mode='undirected', weighted=NULL))
-  idx=which(com$membership==clust.no)
+  idx=which(com$membership==which(com$csize>2)[clust.no])
   
   ##masking out edges from other networks
   FC_mat.mask=matrix(0,nrow=nnodes,ncol=nnodes)
