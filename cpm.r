@@ -109,10 +109,6 @@ cpm.train=function(data,outcome,p=0.05)
   
 cpm.train.cv=function(data,outcome,p,nfolds=5)
   { 
-    data=FC.train
-    outcome=age.train
-    nfolds=5
-    
     ##checks
     #require packages
     list.of.packages = c("caret")
