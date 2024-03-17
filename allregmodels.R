@@ -114,9 +114,11 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat)
   #formatting results matrix
   predmetrics=data.frame(predmetrics)
   colnames(predmetrics)=c("model","r","MAE","bias")
-  
+
+  #report best models
   cat(paste("Model with highest r: ",round(predmetrics$model[which.max(predmetrics$r)],3),"; r=",round(max(predmetrics$r),3),"\n",sep=""))
   cat(paste("Model with lowest MAE: ",round(predmetrics$model[which.min(predmetrics$MAE)],3),"; r=",min(predmetrics$r),sep=""))
+  
   return(predmetrics)
 }
 
