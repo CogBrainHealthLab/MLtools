@@ -109,7 +109,7 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat)
   predmetrics[11,2:4]=extractmetric(model11,test_feat,test_outcome)
   remove(model11)
   
-  cat("11/11 Kernel quantile regression (RBF) completed\n All done.")
+  cat("11/11 Kernel quantile regression (RBF) completed\n\n")
   
   #formatting results matrix
   predmetrics=data.frame(predmetrics)
@@ -119,7 +119,7 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat)
 
   #report best models
   cat(paste("Model with highest r: ",predmetrics$model[which.max(predmetrics$r)],"; r=",round(max(predmetrics$r),3),"\n",sep=""))
-  cat(paste("Model with lowest MAE: ",predmetrics$model[which.min(predmetrics$MAE)],"; r=",round(min(predmetrics$r),3),sep=""))
+  cat(paste("Model with lowest MAE: ",predmetrics$model[which.min(predmetrics$MAE)],"; r=",round(min(predmetrics$MAE),3),sep=""))
   
   return(predmetrics)
 }
