@@ -26,10 +26,18 @@ extractmetric=function(model,test_feat, test_outcome)
 ##Runs 11 regression models
 pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat)
 {
+  #check if train_feat contains columns of 0s, if so, these columns are removed
+  col0_idx=which(colSums(train_feat)==0)
+  if(length(col0_idx)>1)
+  {
+    train_feat=train_feat[,-col0_idx]
+    test_feat=test_feat[,-col0_idx]
+  }
+  
   #setting up results matrix
   predmetrics=matrix(NA,nrow=11, ncol=4)
   predmetrics[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)")
-
+  
   #start of training/testing
   #1) Fitting regression models on training dataset
   #2) applying models to testing dataset
@@ -100,12 +108,15 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat)
   model11=kernlab::kqr(x=train_feat, y=train_outcome, kernel="rbfdot")
   predmetrics[11,2:4]=extractmetric(model11,test_feat,test_outcome)
   remove(model11)
-
+  
   cat("11/11 Kernel quantile regression (RBF) completed\n All done.")
   
   #formatting results matrix
   predmetrics=data.frame(predmetrics)
   colnames(predmetrics)=c("model","r","MAE","bias")
+  
+  cat(paste("Model with highest r: ",round(predmetrics$model[which.max(predmetrics$r)],3),"; r=",round(max(predmetrics$r),3),"\n",sep=""))
+  cat(paste("Model with lowest MAE: ",round(predmetrics$model[which.min(predmetrics$MAE)],3),"; r=",min(predmetrics$r),sep=""))
   return(predmetrics)
 }
 
@@ -140,6 +151,7 @@ plot.metrics=function(results)
 }
 ##################################################################################################################
 ##################################################################################################################
+## EXAMPLE:
 
 #source("https://github.com/CogBrainHealthLab/MLtools/edit/main/allregmodels.R?raw=TRUE")
 #pred.allmodels(train_outcome = HCP_age,train_feat =HCP_dat,test_outcome = CC_age,test_feat = CC_dat)
