@@ -34,6 +34,7 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat)
   #1) Fitting regression models on training dataset
   #2) applying models to testing dataset
   #3) calculate prediction metrics
+  
   CV.RR.CT = glmnet::cv.glmnet(train_feat, train_outcome, alpha = 0,nfolds = 5,parallel = T)
   model1=glmnet::glmnet(train_feat, train_outcome, alpha = 0, lambda = CV.RR.CT$lambda.1se)
   predmetrics[1,2:4]=extractmetric(model1,test_feat,test_outcome)
@@ -109,7 +110,7 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat)
 }
 
 ## plot out results using ggplot
-plot.results=function(results)
+plot.metrics=function(results)
 {
   results$modelno=1:11
   a=ggplot2::ggplot(results,ggplot2::aes(x=modelno,y=as.numeric(r), group=1))+
@@ -139,4 +140,6 @@ plot.results=function(results)
 }
 ##################################################################################################################
 ##################################################################################################################
-#source("https://github.com/CogBrainHealthLab/MLtools/blob/main/cpm.r?raw=TRUE")
+
+#source("https://github.com/CogBrainHealthLab/MLtools/edit/main/allregmodels.R?raw=TRUE")
+#pred.allmodels(train_outcome = HCP_age,train_feat =HCP_dat,test_outcome = CC_age,test_feat = CC_dat)
