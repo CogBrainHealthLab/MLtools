@@ -24,7 +24,7 @@ extractmetric=function(model,test_feat, test_outcome)
 }
 
 ##Runs 11 regression models
-pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat)
+pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat, xgb=F)
 {
   #check if train_feat contains columns of 0s, if so, these columns are removed
   col0_idx=which(colSums(train_feat)==0)
@@ -35,8 +35,8 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat)
   }
   
   #setting up results matrix
-  predmetrics=matrix(NA,nrow=11, ncol=4)
-  predmetrics[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)")
+  predmetrics=matrix(NA,nrow=13, ncol=4)
+  predmetrics[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)","XGB (linear)", "XGB (tree)")
   
   #start of training/testing
   #1) Fitting regression models on training dataset
@@ -48,106 +48,121 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat)
   predmetrics[1,2:4]=extractmetric(model1,test_feat,test_outcome)
   remove(model1,CV.RR.CT)
   
-  cat("1/11 Ridge regression completed\n")
+  cat("1 Ridge regression completed\n")
   
   CV.RR.CT = glmnet::cv.glmnet(train_feat, train_outcome, alpha = 1,nfolds = 5,parallel = T)
   model2=glmnet::glmnet(train_feat, train_outcome, alpha = 1, lambda = CV.RR.CT$lambda.1se)
   predmetrics[2,2:4]=extractmetric(model2,test_feat,test_outcome)
   remove(model2,CV.RR.CT)
   
-  cat("2/11 Lasso regression completed\n")
+  cat("2 Lasso regression completed\n")
   
   model3 = pls::plsr(train_outcome~train_feat,ncomp=20,segments=5, validation="CV",)
   predmetrics[3,2:4]=extractmetric(model3,test_feat,test_outcome)
   remove(model3)
   
-  cat("3/11 Partial least squares regression completed\n")
+  cat("3 Partial least squares regression completed\n")
   
   model4=kernlab::gausspr(x=train_feat, y=train_outcome, kernel="vanilladot")
   predmetrics[4,2:4]=extractmetric(model4,test_feat,test_outcome)
   remove(model4)
   
-  cat("4/11 Gaussian process regression completed\n")
+  cat("4 Gaussian process regression completed\n")
   
   model5=kernlab::ksvm(x=train_feat, y=train_outcome, kernel="vanilladot")
   predmetrics[5,2:4]=extractmetric(model5,test_feat,test_outcome)
   remove(model5)
   
-  cat("5/11 Support vector machine (Vanilla) completed\n")
+  cat("5 Support vector machine (Vanilla) completed\n")
   
   model6=kernlab::rvm(x=train_feat, y=train_outcome, kernel="vanilladot")
   predmetrics[6,2:4]=extractmetric(model6,test_feat,test_outcome)
   remove(model6)
   
-  cat("6/11 Relevance vector machine (Vanilla) completed\n")
+  cat("6 Relevance vector machine (Vanilla) completed\n")
   
   model7=kernlab::kqr(x=train_feat, y=train_outcome, kernel="vanilladot")
   predmetrics[7,2:4]=extractmetric(model7,test_feat,test_outcome)
   remove(model7)
   
-  cat("7/11 Kernel quantile regression (vanilla) completed\n")
+  cat("7 Kernel quantile regression (vanilla) completed\n")
   
   model8=kernlab::gausspr(x=train_feat, y=as.numeric(train_outcome), kernel="rbfdot")
   predmetrics[8,2:4]=extractmetric(model8,test_feat,test_outcome)
   remove(model8)
   
-  cat("8/11 Gaussian process regression (RBF) completed\n")
+  cat("8 Gaussian process regression (RBF) completed\n")
   
   model9=kernlab::ksvm(x=train_feat, y=train_outcome, kernel="rbfdot")
   predmetrics[9,2:4]=extractmetric(model9,test_feat,test_outcome)
   remove(model9)
   
-  cat("9/11 Support vector machine (RBF) completed\n")
+  cat("9 Support vector machine (RBF) completed\n")
   
   model10=kernlab::rvm(x=train_feat, y=train_outcome, kernel="rbfdot")
   predmetrics[10,2:4]=extractmetric(model10,test_feat,test_outcome)
   remove(model10)
   
-  cat("10/11 Relevance vector machine (RBF) completed\n")
+  cat("10 Relevance vector machine (RBF) completed\n")
   
   model11=kernlab::kqr(x=train_feat, y=train_outcome, kernel="rbfdot")
   predmetrics[11,2:4]=extractmetric(model11,test_feat,test_outcome)
   remove(model11)
   
-  cat("11/11 Kernel quantile regression (RBF) completed\n\n")
+  cat("11 Kernel quantile regression (RBF) completed\n")
   
+  #optional XGB models
+  if(xgb==T)
+  {
+    source("https://github.com/CogBrainHealthLab/MLtools/blob/main/xgb.R?raw=TRUE")
+    model12=XGBlinear(train_feat, train_outcome)
+    predmetrics[12,2:4]=extractmetric(model12,test_feat,test_outcome)
+    remove(model12)
+    
+    cat("12 XGBlinear completed\n")
+    
+    model13=XGBtree(train_feat, train_outcome)
+    predmetrics[13,2:4]=extractmetric(model13,test_feat,test_outcome)
+    remove(model13)
+    
+    cat("13 XGBtree completed\n")
+  } else
+  {
+    predmetrics=predmetrics[1:11,]
+  }
   #formatting results matrix
   predmetrics=data.frame(predmetrics)
   colnames(predmetrics)=c("model","r","MAE","bias")
   predmetrics$r=as.numeric(predmetrics$r)
   predmetrics$MAE=as.numeric(predmetrics$MAE)
-
-  #report best models
-  cat(paste("Model with highest r: ",predmetrics$model[which.max(predmetrics$r)],"; r=",round(max(predmetrics$r),3),"\n",sep=""))
-  cat(paste("Model with lowest MAE: ",predmetrics$model[which.min(predmetrics$MAE)],"; r=",round(min(predmetrics$MAE),3),sep=""))
   
+  cat(paste("\nModel with highest r: ",predmetrics$model[which.max(predmetrics$r)],"; r=",round(max(predmetrics$r),3),"\n",sep=""))
+  cat(paste("Model with lowest MAE: ",predmetrics$model[which.min(predmetrics$MAE)],"; r=",round(min(predmetrics$MAE),3),sep=""))
   return(predmetrics)
 }
 
 ## plot out results using ggplot
 plot.metrics=function(results)
 {
-  results$modelno=1:11
+  results$modelno=1:NROW(results)
   a=ggplot2::ggplot(results,ggplot2::aes(x=modelno,y=as.numeric(r), group=1))+
     ggplot2::geom_point()+
     ggplot2::geom_line()+
-    ggplot2::scale_x_continuous(breaks=1:11)+
+    ggplot2::scale_x_continuous(breaks=1:NROW(results))+
     ggplot2::labs(x=NULL, y="r")+
     ggplot2::theme(axis.text.x=ggplot2::element_blank(),plot.margin=grid::unit(c(0,0,0,0), "mm"))
   
   b=ggplot2::ggplot(results,ggplot2::aes(x=modelno,y=as.numeric(MAE), group=1))+
     ggplot2::geom_point()+
     ggplot2::geom_line()+
-    ggplot2::scale_x_continuous(breaks=1:11)+
+    ggplot2::scale_x_continuous(breaks=1:NROW(results))+
     ggplot2::labs(x=NULL, y="MAE")+
     ggplot2::theme(axis.text.x=ggplot2::element_blank(),plot.margin=grid::unit(c(0,0,0,0), "mm"))
   
   c=ggplot2::ggplot(results,ggplot2::aes(x=modelno,y=as.numeric(bias), group=1))+
     ggplot2::geom_point()+
     ggplot2::geom_line()+
-    ggplot2::scale_x_continuous(breaks=1:11,
-                                labels=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)",
-                                         "KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)"))+
+    ggplot2::scale_x_continuous(breaks=1:NROW(results),labels=results$model)+
     ggplot2::labs(x=NULL, y="bias")+
     ggplot2::theme(axis.text.x=ggplot2::element_text(angle=45, hjust=1),plot.margin=grid::unit(c(0,0,0,0), "mm"))
   
