@@ -172,5 +172,5 @@ plot.metrics=function(results)
 ##################################################################################################################
 ## EXAMPLE:
 
-#source("https://github.com/CogBrainHealthLab/MLtools/edit/main/allregmodels.R?raw=TRUE")
+#source("https://github.com/CogBrainHealthLab/MLtools/blob/main/allregmodels.R?raw=TRUE")
 #pred.allmodels(train_outcome = HCP_age,train_feat =HCP_dat,test_outcome = CC_age,test_feat = CC_dat)
