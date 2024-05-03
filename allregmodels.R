@@ -155,7 +155,7 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat, xgb=F
   predscores=data.frame(predscores)
   colnames(predscores)=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)","XGB (linear)", "XGB (tree)")
                     
-  return(list(predmetrics,predscores)
+  return(list(predmetrics,predscores))
 }
 
 ## plot out results using ggplot
