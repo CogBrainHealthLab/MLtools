@@ -37,7 +37,7 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat, xgb=F
   #setting up results matrix
   predmetrics=matrix(NA,nrow=13, ncol=4)
   predmetrics[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)","XGB (linear)", "XGB (tree)")
-  predscores=matrix(NA,nrow=length(test_outcome,ncol=13)
+  predscores=matrix(NA,nrow=length(test_outcome,ncol=13))
   #start of training/testing
   #1) Fitting regression models on training dataset
   #2) applying models to testing dataset
