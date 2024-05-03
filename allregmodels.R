@@ -153,7 +153,7 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat, xgb=F
   cat(paste("Model with lowest MAE: ",predmetrics$model[which.min(predmetrics$MAE)],"; MAE=",round(min(predmetrics$MAE),3),sep=""))
 
   predscores=data.frame(predscores)
-  colnames(predscores)="RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)","XGB (linear)", "XGB (tree)")
+  colnames(predscores)=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)","XGB (linear)", "XGB (tree)")
                     
   return(list(predmetrics,predscores)
 }
