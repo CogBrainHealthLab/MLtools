@@ -137,7 +137,7 @@ pred.allmodels=function(train_outcome, train_feat,test_outcome, test_feat, xgb=F
   predmetrics$MAE=as.numeric(predmetrics$MAE)
   
   cat(paste("\nModel with highest r: ",predmetrics$model[which.max(predmetrics$r)],"; r=",round(max(predmetrics$r),3),"\n",sep=""))
-  cat(paste("Model with lowest MAE: ",predmetrics$model[which.min(predmetrics$MAE)],"; r=",round(min(predmetrics$MAE),3),sep=""))
+  cat(paste("Model with lowest MAE: ",predmetrics$model[which.min(predmetrics$MAE)],"; MAE=",round(min(predmetrics$MAE),3),sep=""))
   return(predmetrics)
 }
 
