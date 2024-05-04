@@ -26,17 +26,17 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   }
   ##harmonization
   
-  if(harm!=0)
+  if(harm!=0) 
   {
     dat.all=rbind(data.matrix(train_feat),data.matrix(test_feat))
-    
-    if(harm==1)
+  
+    if(harm==1) #without any covariates
     {
       dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))))  
-    } else if(harm==2)
+    } else if(harm==2) #with age as a covariate
     {
       dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))),mod=c(train_outcome,test_outcome))  
-    } else if(harm==3)
+    } else if(harm==3) #with age and sex as covariates
     {
     train_feat=t(dat.harmonized$dat.combat)[1:length(train_outcome),]
     test_feat=t(dat.harmonized$dat.combat)[(length(train_outcome)+1):(length(train_outcome)+length(test_outcome)),]
@@ -72,7 +72,6 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   doParallel::registerDoParallel(2)
   `%dopar%` = foreach::`%dopar%`
   
-  
   results=foreach::foreach(sex=1:2, .combine="c",.packages = c("glmnet","pls","kernlab"), .export ="extractmetric.bysex")  %dopar%
     {
       #setting up results matrix
@@ -84,6 +83,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       #1) Fitting regression models on training dataset
       #2) applying models to testing dataset
       #3) calculate prediction metrics
+      #4) calculate predicted scores
       
       CV.RR.CT = glmnet::cv.glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0,nfolds = 5)
       model1=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0, lambda = CV.RR.CT$lambda.1se)
@@ -205,10 +205,8 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   predmetrics.recomb[,3]=colMeans(abs(pred_outcome.recomb-test_outcome.recomb))
   predmetrics.recomb[,4]=cor((pred_outcome.recomb-test_outcome.recomb),test_outcome.recomb)
   
-
   cat(paste("\nModel with highest r: ",predmetrics.recomb$model[which.max(as.numeric(predmetrics.recomb$r))],"; r=",round(max(as.numeric(predmetrics.recomb$r)),3),"\n",sep=""))
   cat(paste("Model with lowest MAE: ",predmetrics.recomb$model[which.min(as.numeric(predmetrics.recomb$MAE))],"; MAE=",round(min(as.numeric(predmetrics.recomb$MAE)),3),sep=""))
-  
   
   return(list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb,c(test.M.idx,test.F.idx)))
 }
