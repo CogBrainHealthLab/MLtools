@@ -13,9 +13,10 @@ extractmetric.bysex=function(model,test_feat, test_outcome)
   }
 }
 
-##Runs 11 regression models
-pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F)
+##Runs regression models
+pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F, harm=0)
 {
+
   #check if train_feat contains columns of 0s, if so, these columns are removed
   col0_idx=which(colSums(train_feat)==0)
   if(length(col0_idx)>1)
@@ -23,6 +24,27 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     train_feat=train_feat[,-col0_idx]
     test_feat=test_feat[,-col0_idx]
   }
+  ##harmonization
+  
+  if(harm!=0)
+  {
+    dat.all=rbind(data.matrix(train_feat),data.matrix(test_feat))
+    
+    if(harm==1)
+    {
+      dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))))  
+    } else if(harm==2)
+    {
+      dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))),mod=c(train_outcome,test_outcome))  
+    } else if(harm==3)
+    {
+    train_feat=t(dat.harmonized$dat.combat)[1:length(train_outcome),]
+    test_feat=t(dat.harmonized$dat.combat)[(length(train_outcome)+1):(length(train_outcome)+length(test_outcome)),]
+    }
+    remove(dat.all,dat.harmonized)
+    cat("Data harmonization completed")
+  }
+  
   #split datasets by sex
   
   train.M.idx=which(train_sex==0)
@@ -54,8 +76,8 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   results=foreach::foreach(sex=1:2, .combine="c",.packages = c("glmnet","pls","kernlab"), .export ="extractmetric.bysex")  %dopar%
     {
       #setting up results matrix
-      predmetrics=matrix(NA,nrow=13, ncol=4)
-      predmetrics[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)","XGB (linear)", "XGB (tree)")
+      predmetrics=matrix(NA,nrow=11, ncol=4)
+      predmetrics[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)")
       
       predscores=matrix(NA,nrow=length(test_outcome.bysex[[sex]]),ncol=11)
       #start of training/testing
@@ -119,23 +141,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       predmetrics[11,2:4]=extractmetric.bysex(model11,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
       predscores[,11]=extractmetric.bysex(model11,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
       remove(model11)
-      
-      #optional XGB models
-      if(xgb==T)
-      {
-        source("https://github.com/CogBrainHealthLab/MLtools/blob/main/xgb.R?raw=TRUE")
-        model12=XGBlinear(train_feat.bysex[[sex]], train_outcome.bysex[[sex]])
-        predmetrics[12,2:4]=extractmetric.bysex(model12,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])
-        remove(model12)
-        
-        model13=XGBtree(train_feat.bysex[[sex]], train_outcome.bysex[[sex]])
-        predmetrics[13,2:4]=extractmetric.bysex(model13,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])
-        remove(model13)
-        
-      } else
-      {
-        predmetrics=predmetrics[1:11,]
-      }
+
       #formatting results matrix
       predmetrics=data.frame(predmetrics)
       colnames(predmetrics)=c("model","r","MAE","bias")
@@ -145,29 +151,64 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       return(list(predmetrics,predscores))
     }
   
-    #recombine sex partitions  
-    pred_outcome.recomb=rbind(results[[2]],results[[4]])
-    test_outcome.recomb=c(test_outcome.bysex[[1]],test_outcome.bysex[[2]])
-
-    #prediction metrics in recombined data
-    predmetrics.recomb=matrix(NA,nrow=13, ncol=4)
-    predmetrics.recomb[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)","XGB (linear)", "XGB (tree)")
-    predmetrics.recomb=data.frame(predmetrics.recomb)
-    colnames(predmetrics.recomb)=c("model","r","MAE","bias")
-    predmetrics.recomb[1:11,2]=cor(pred_outcome.recomb,test_outcome.recomb)
-    predmetrics.recomb[1:11,3]=colMeans(abs(pred_outcome.recomb-test_outcome.recomb))
-    predmetrics.recomb[1:11,4]=cor((pred_outcome.recomb-test_outcome.recomb),test_outcome.recomb)
-    
-    colnames(pred_outcome.recomb)=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)","KQR (RBF)")   
-    if(xgb==F)
+  ## XGB needs to be executed outside the foreach loops
+  if(xgb==T)
+  {
+    source("https://github.com/CogBrainHealthLab/MLtools/blob/main/xgb.R?raw=TRUE")
+    xgbresults=list()
+    for (sex in 1:2)
     {
-      predmetrics.recomb=predmetrics.recomb[1:11,]
-      pred_outcome.recomb=pred_outcome.recomb[,1:11]
+      xgbpredmetrics=matrix(NA,nrow=2, ncol=4)
+      model12=XGBlinear(train_feat.bysex[[sex]], train_outcome.bysex[[sex]])
+      xgbpredmetrics[1,2:4]=extractmetric.bysex(model12,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])
+      xgbpredscores[,1]=extractmetric.bysex(model12,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(model12)
+      
+      model13=XGBtree(train_feat.bysex[[sex]], train_outcome.bysex[[sex]])
+      xgbpredmetrics[2,2:4]=extractmetric.bysex(model13,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])
+      xgbpredscores[,2]=extractmetric.bysex(model13,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(model13)
+      
+      xgbpredmetrics=data.frame(xgbpredmetrics)
+      colnames(xgbpredmetrics)=c("model","r","MAE","bias")
+      xgbpredmetrics$r=as.numeric(xgbpredmetrics$r)
+      xgbpredmetrics$MAE=as.numeric(xgbpredmetrics$MAE)
+      
+      xgbresults[[1+((sex-1)*2)]]=xgbpredmetrics
+      xgbresults[[2+((sex-1)*2)]]=xgbpredscores
     }
-    cat(paste("\nModel with highest r: ",predmetrics.recomb$model[which.max(as.numeric(predmetrics.recomb$r))],"; r=",round(max(as.numeric(predmetrics.recomb$r)),3),"\n",sep=""))
-    cat(paste("Model with lowest MAE: ",predmetrics.recomb$model[which.min(as.numeric(predmetrics.recomb$MAE))],"; MAE=",round(min(as.numeric(predmetrics.recomb$MAE)),3),sep=""))
+    results[[1]]=rbind(results[[1]],xgbresults[[1]])
+    results[[3]]=rbind(results[[3]],xgbresults[[3]])
+    results[[2]]=cbind(results[[2]],xgbresults[[2]])
+    results[[4]]=cbind(results[[4]],xgbresults[[4]])
     
-    
-    return(list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb,c(test.M.idx,test.F.idx)))
+  } 
+  
+  #recombine sex partitions  
+  pred_outcome.recomb=rbind(results[[2]],results[[4]])
+  test_outcome.recomb=c(test_outcome.bysex[[1]],test_outcome.bysex[[2]])
+  
+  #prediction metrics in recombined data
+  predmetrics.recomb=matrix(NA,nrow=NCOL(results[[4]]), ncol=4)
+  
+  if(xgb==F)
+  {
+    predmetrics.recomb[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)")  
+  } else
+  {
+    predmetrics.recomb[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)", "XGB (linear)","XGB (Tree)")  
   }
   
+  predmetrics.recomb=data.frame(predmetrics.recomb)
+  colnames(predmetrics.recomb)=c("model","r","MAE","bias")
+  predmetrics.recomb[,2]=cor(pred_outcome.recomb,test_outcome.recomb)
+  predmetrics.recomb[,3]=colMeans(abs(pred_outcome.recomb-test_outcome.recomb))
+  predmetrics.recomb[,4]=cor((pred_outcome.recomb-test_outcome.recomb),test_outcome.recomb)
+  
+
+  cat(paste("\nModel with highest r: ",predmetrics.recomb$model[which.max(as.numeric(predmetrics.recomb$r))],"; r=",round(max(as.numeric(predmetrics.recomb$r)),3),"\n",sep=""))
+  cat(paste("Model with lowest MAE: ",predmetrics.recomb$model[which.min(as.numeric(predmetrics.recomb$MAE))],"; MAE=",round(min(as.numeric(predmetrics.recomb$MAE)),3),sep=""))
+  
+  
+  return(list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb,c(test.M.idx,test.F.idx)))
+}
