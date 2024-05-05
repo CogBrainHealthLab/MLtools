@@ -16,7 +16,7 @@ extractmetric.bysex=function(model,test_feat, test_outcome)
 ##Runs regression models
 pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F, harm=0)
 {
-
+  
   #check if train_feat contains columns of 0s, if so, these columns are removed
   col0_idx=which(colSums(train_feat)==0)
   if(length(col0_idx)>1)
@@ -24,22 +24,18 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     train_feat=train_feat[,-col0_idx]
     test_feat=test_feat[,-col0_idx]
   }
-  ##harmonization
   
-  if(harm!=0) 
+  ##harmonization without sex
+  if(harm==1 | harm==2) 
   {
     dat.all=rbind(data.matrix(train_feat),data.matrix(test_feat))
-  
+    
     if(harm==1) #without any covariates
     {
       dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))))  
     } else if(harm==2) #with age as a covariate
     {
       dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))),mod=c(train_outcome,test_outcome))  
-    } else if(harm==3) #with age and sex as covariates
-    {
-    train_feat=t(dat.harmonized$dat.combat)[1:length(train_outcome),]
-    test_feat=t(dat.harmonized$dat.combat)[(length(train_outcome)+1):(length(train_outcome)+length(test_outcome)),]
     }
     remove(dat.all,dat.harmonized)
     cat("Data harmonization completed")
@@ -60,6 +56,23 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   test_feat.bysex=list(test_feat[test.M.idx,],test_feat[test.F.idx,])
   
   remove(test_outcome,train_outcome,test_feat,train_feat,train.M.idx,train.F.idx)
+  
+  ##harmonize different sexes separately
+  if(harm==3) 
+  {
+    for (sex in 1:2)
+    {
+      dat.all=rbind(data.matrix(train_feat.bysex[[sex]]),data.matrix(test_feat.bysex[[sex]]))
+      dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), 
+                                               batch=c(rep("train",length(train_outcome.bysex[[sex]])),rep("test",length(test_outcome.bysex[[sex]]))),
+                                               mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
+      
+      train_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[1:length(train_outcome.bysex[[sex]]),]
+      test_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
+      remove(dat.harmonized)
+    }
+  }
+  
   
   #activate parallel processing
   unregister_dopar = function() {
@@ -141,7 +154,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       predmetrics[11,2:4]=extractmetric.bysex(model11,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
       predscores[,11]=extractmetric.bysex(model11,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
       remove(model11)
-
+      
       #formatting results matrix
       predmetrics=data.frame(predmetrics)
       colnames(predmetrics)=c("model","r","MAE","bias")
