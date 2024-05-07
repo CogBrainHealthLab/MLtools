@@ -3,7 +3,8 @@ extractmetric.bysex=function(model,test_feat, test_outcome)
   #PLSR model has to be treated differently
   if(class(model)[1]=="mvr")
   {
-    pred_outcome=predict(model,test_feat, ncomp=pls::selectNcomp(model,  method = "randomization"))
+    rmsep=RMSEP(model)
+    pred_outcome=predict(model,test_feat, ncomp=which.min(data.frame(rmsep$val)[2,2:21]))
     return(list(c(cor(pred_outcome,test_outcome),mean(abs(pred_outcome-test_outcome)),cor((pred_outcome-test_outcome),test_outcome)),pred_outcome))
   } else
   {
@@ -110,7 +111,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       predscores[,2]=extractmetric.bysex(model2,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
       remove(model2,CV.RR.CT)
       
-      model3 = pls::plsr(train_outcome.bysex[[sex]]~train_feat.bysex[[sex]],ncomp=20,segments=5, validation="CV",)
+      model3 = pls::plsr(train_outcome.bysex[[sex]]~train_feat.bysex[[sex]],ncomp=20,segments=5, validation="CV")
       predmetrics[3,2:4]=extractmetric.bysex(model3,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
       predscores[,3]=extractmetric.bysex(model3,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
       remove(model3)
@@ -218,8 +219,11 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   predmetrics.recomb[,3]=colMeans(abs(pred_outcome.recomb-test_outcome.recomb))
   predmetrics.recomb[,4]=cor((pred_outcome.recomb-test_outcome.recomb),test_outcome.recomb)
   
-  cat(paste("\nModel with highest r: ",predmetrics.recomb$model[which.max(as.numeric(predmetrics.recomb$r))],"; r=",round(max(as.numeric(predmetrics.recomb$r)),3),"\n",sep=""))
-  cat(paste("Model with lowest MAE: ",predmetrics.recomb$model[which.min(as.numeric(predmetrics.recomb$MAE))],"; MAE=",round(min(as.numeric(predmetrics.recomb$MAE)),3),sep=""))
+  max.idx=which(as.numeric(predmetrics.recomb$r)==max(as.numeric(predmetrics.recomb$r),na.rm = T))
+  min.idx=which(as.numeric(predmetrics.recomb$r)==min(as.numeric(predmetrics.recomb$r),na.rm = T))
+  
+  cat(paste("\nModel with highest r: ",predmetrics.recomb$model[max.idx],"; r=",round(max(as.numeric(predmetrics.recomb$r),na.rm=T),3),"\n",sep=""))
+  cat(paste("Model with lowest MAE: ",predmetrics.recomb$model[min.idx],"; MAE=",round(min(as.numeric(predmetrics.recomb$MAE),na.rm=T),3),sep=""))
   
   return(list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb,c(test.M.idx,test.F.idx)))
 }
