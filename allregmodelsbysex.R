@@ -172,17 +172,22 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     xgbresults=list()
     for (sex in 1:2)
     {
+      #results matrix
       xgbpredmetrics=matrix(NA,nrow=2, ncol=4)
+      xgbpredscores=matrix(NA,nrow=length(test_outcome.bysex[[sex]]),ncol=2)
+
+      #training models
       model12=XGBlinear(train_feat.bysex[[sex]], train_outcome.bysex[[sex]])
-      xgbpredmetrics[1,2:4]=extractmetric.bysex(model12,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])
+      xgbpredmetrics[1,2:4]=extractmetric.bysex(model12,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
       xgbpredscores[,1]=extractmetric.bysex(model12,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
       remove(model12)
       
       model13=XGBtree(train_feat.bysex[[sex]], train_outcome.bysex[[sex]])
-      xgbpredmetrics[2,2:4]=extractmetric.bysex(model13,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])
+      xgbpredmetrics[2,2:4]=extractmetric.bysex(model13,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
       xgbpredscores[,2]=extractmetric.bysex(model13,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
       remove(model13)
-      
+
+      #formatting results matrix
       xgbpredmetrics=data.frame(xgbpredmetrics)
       colnames(xgbpredmetrics)=c("model","r","MAE","bias")
       xgbpredmetrics$r=as.numeric(xgbpredmetrics$r)
@@ -195,7 +200,6 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     results[[3]]=rbind(results[[3]],xgbresults[[3]])
     results[[2]]=cbind(results[[2]],xgbresults[[2]])
     results[[4]]=cbind(results[[4]],xgbresults[[4]])
-    
   } 
   
   #recombine sex partitions  
