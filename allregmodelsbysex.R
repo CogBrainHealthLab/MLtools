@@ -224,7 +224,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   predmetrics.recomb[,4]=cor((pred_outcome.recomb-test_outcome.recomb),test_outcome.recomb)
   
   max.idx=which(as.numeric(predmetrics.recomb$r)==max(as.numeric(predmetrics.recomb$r),na.rm = T))
-  min.idx=which(as.numeric(predmetrics.recomb$r)==min(as.numeric(predmetrics.recomb$r),na.rm = T))
+  min.idx=which(as.numeric(predmetrics.recomb$MAE)==min(as.numeric(predmetrics.recomb$MAE),na.rm = T))
   
   cat(paste("\nModel with highest r: ",predmetrics.recomb$model[max.idx],"; r=",round(max(as.numeric(predmetrics.recomb$r),na.rm=T),3),"\n",sep=""))
   cat(paste("Model with lowest MAE: ",predmetrics.recomb$model[min.idx],"; MAE=",round(min(as.numeric(predmetrics.recomb$MAE),na.rm=T),3),sep=""))
