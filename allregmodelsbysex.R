@@ -41,6 +41,21 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     remove(dat.all,dat.harmonized)
     cat("Data harmonization completed")
   }
+
+  if(harm==4 | harm==5) 
+  {
+    dat.all=rbind(data.matrix(train_feat),data.matrix(test_feat))
+    
+    if(harm==1) #without any covariates
+    {
+      dat.harmonized =CovBat::covbat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))))  
+    } else if(harm==2) #with age as a covariate
+    {
+      dat.harmonized =CovBat::covbat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))),mod=c(train_outcome,test_outcome))  
+    }
+    remove(dat.all,dat.harmonized)
+    cat("Data harmonization completed")
+  }
   
   #split datasets by sex
   
@@ -65,6 +80,20 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     {
       dat.all=rbind(data.matrix(train_feat.bysex[[sex]]),data.matrix(test_feat.bysex[[sex]]))
       dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), 
+                                               batch=c(rep("train",length(train_outcome.bysex[[sex]])),rep("test",length(test_outcome.bysex[[sex]]))),
+                                               mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
+      
+      train_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[1:length(train_outcome.bysex[[sex]]),]
+      test_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
+      remove(dat.harmonized)
+    }
+  }
+  if(harm==6) 
+  {
+    for (sex in 1:2)
+    {
+      dat.all=rbind(data.matrix(train_feat.bysex[[sex]]),data.matrix(test_feat.bysex[[sex]]))
+      dat.harmonized =CovBat::covbat(dat=t(dat.all), 
                                                batch=c(rep("train",length(train_outcome.bysex[[sex]])),rep("test",length(test_outcome.bysex[[sex]]))),
                                                mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
       
