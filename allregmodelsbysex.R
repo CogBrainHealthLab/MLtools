@@ -46,10 +46,10 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   {
     dat.all=rbind(data.matrix(train_feat),data.matrix(test_feat))
     
-    if(harm==1) #without any covariates
+    if(harm==4) #without any covariates
     {
       dat.harmonized =CovBat::covbat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))))  
-    } else if(harm==2) #with age as a covariate
+    } else if(harm==5) #with age as a covariate
     {
       dat.harmonized =CovBat::covbat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))),mod=c(train_outcome,test_outcome))  
     }
