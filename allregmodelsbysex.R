@@ -26,37 +26,6 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     test_feat=test_feat[,-col0_idx]
   }
   
-  ##harmonization without sex
-  if(harm==1 | harm==2) 
-  {
-    dat.all=rbind(data.matrix(train_feat),data.matrix(test_feat))
-    
-    if(harm==1) #without any covariates
-    {
-      dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))))  
-    } else if(harm==2) #with age as a covariate
-    {
-      dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), batch=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))),mod=c(train_outcome,test_outcome))  
-    }
-    remove(dat.all,dat.harmonized)
-    cat("Data harmonization completed")
-  }
-
-  if(harm==4 | harm==5) 
-  {
-    dat.all=rbind(data.matrix(train_feat),data.matrix(test_feat))
-    
-    if(harm==4) #without any covariates
-    {
-      dat.harmonized =CovBat::covbat(dat=t(dat.all), bat=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))))  
-    } else if(harm==5) #with age as a covariate
-    {
-      dat.harmonized =CovBat::covbat(dat=t(dat.all), bat=c(rep("train",length(train_outcome)),rep("test",length(test_outcome))),mod=c(train_outcome,test_outcome))  
-    }
-    remove(dat.all,dat.harmonized)
-    cat("Data harmonization completed")
-  }
-  
   #split datasets by sex
   
   train.M.idx=which(train_sex==0)
@@ -74,7 +43,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   remove(test_outcome,train_outcome,test_feat,train_feat,train.M.idx,train.F.idx)
   
   ##harmonize different sexes separately
-  if(harm==3) 
+  if(harm==1) 
   {
     for (sex in 1:2)
     {
@@ -88,7 +57,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       remove(dat.harmonized)
     }
   }
-  if(harm==6) 
+  if(harm==2) 
   {
     for (sex in 1:2)
     {
@@ -102,7 +71,6 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       remove(dat.harmonized)
     }
   }
-  
   
   #activate parallel processing
   unregister_dopar = function() {
