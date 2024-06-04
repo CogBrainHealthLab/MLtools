@@ -95,7 +95,8 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       #2) applying models to testing dataset
       #3) calculate prediction metrics
       #4) calculate predicted scores
-      
+
+      set.seed(123)
       CV.RR.CT = glmnet::cv.glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0,nfolds = 5)
       model1=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0, lambda = CV.RR.CT$lambda.1se)
       predmetrics[1,2:4]=extractmetric.bysex(model1,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
