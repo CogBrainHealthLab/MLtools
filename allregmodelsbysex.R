@@ -52,8 +52,8 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
                                                batch=c(rep("train",length(train_outcome.bysex[[sex]])),rep("test",length(test_outcome.bysex[[sex]]))),
                                                mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
       
-      train_feat.bysex[[sex]]=t(dat.harmonized$dat.covbat)[1:length(train_outcome.bysex[[sex]]),]
-      test_feat.bysex[[sex]]=t(dat.harmonized$dat.covbat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
+      train_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[1:length(train_outcome.bysex[[sex]]),]
+      test_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
       remove(dat.harmonized)
     }
   }
@@ -66,8 +66,8 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
                                                bat=c(rep("train",length(train_outcome.bysex[[sex]])),rep("test",length(test_outcome.bysex[[sex]]))),
                                                mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
       
-      train_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[1:length(train_outcome.bysex[[sex]]),]
-      test_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
+      train_feat.bysex[[sex]]=t(dat.harmonized$dat.covbat)[1:length(train_outcome.bysex[[sex]]),]
+      test_feat.bysex[[sex]]=t(dat.harmonized$dat.covbat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
       remove(dat.harmonized)
     }
   }
