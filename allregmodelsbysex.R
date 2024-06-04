@@ -15,7 +15,7 @@ extractmetric.bysex=function(model,test_feat, test_outcome)
 }
 
 ##Runs regression models
-pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F, harm=0)
+pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F, harm=0, eb=T)
 {
   
   #check if train_feat contains columns of 0s, if so, these columns are removed
@@ -48,7 +48,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     for (sex in 1:2)
     {
       dat.all=rbind(data.matrix(train_feat.bysex[[sex]]),data.matrix(test_feat.bysex[[sex]]))
-      dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), 
+      dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), eb=eb,
                                                batch=c(rep("train",length(train_outcome.bysex[[sex]])),rep("test",length(test_outcome.bysex[[sex]]))),
                                                mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
       
@@ -62,7 +62,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     for (sex in 1:2)
     {
       dat.all=rbind(data.matrix(train_feat.bysex[[sex]]),data.matrix(test_feat.bysex[[sex]]))
-      dat.harmonized =CovBat::covbat(dat=t(dat.all), 
+      dat.harmonized =CovBat::covbat(dat=t(dat.all), eb=eb,
                                                bat=c(rep("train",length(train_outcome.bysex[[sex]])),rep("test",length(test_outcome.bysex[[sex]]))),
                                                mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
       
