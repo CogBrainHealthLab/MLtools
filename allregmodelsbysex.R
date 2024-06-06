@@ -15,8 +15,9 @@ extractmetric.bysex=function(model,test_feat, test_outcome)
 }
 
 ##Runs regression models
-pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F, harm=0, eb=T)
+pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F, harm=0, eb=T, train_site)
 {
+  
   
   #check if train_feat contains columns of 0s, if so, these columns are removed
   col0_idx=which(colSums(train_feat)==0)
@@ -37,41 +38,44 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   train_outcome.bysex=list(train_outcome[train.M.idx],train_outcome[train.F.idx])
   train_feat.bysex=list(train_feat[train.M.idx,],train_feat[train.F.idx,])
   
+  if(missing("train_site"))
+  {
+    train_site=rep("train",length(train_outcome))
+  }
+  train_site.bysex=list(train_site[train.M.idx],train_site[train.F.idx])
+  
   test_outcome.bysex=list(test_outcome[test.M.idx],test_outcome[test.F.idx])
   test_feat.bysex=list(test_feat[test.M.idx,],test_feat[test.F.idx,])
   
   remove(test_outcome,train_outcome,test_feat,train_feat,train.M.idx,train.F.idx)
   
   ##harmonize different sexes separately
-  if(harm==1) 
+
+  for (sex in 1:2)
   {
-    for (sex in 1:2)
+    dat.all=rbind(data.matrix(train_feat.bysex[[sex]]),data.matrix(test_feat.bysex[[sex]]))
+    if(harm==1) 
     {
-      dat.all=rbind(data.matrix(train_feat.bysex[[sex]]),data.matrix(test_feat.bysex[[sex]]))
       dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), eb=eb,
-                                               batch=c(rep("train",length(train_outcome.bysex[[sex]])),rep("test",length(test_outcome.bysex[[sex]]))),
+                                               batch=c(train_site.bysex[[sex]],rep("test",length(test_outcome.bysex[[sex]]))),
                                                mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
       
       train_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[1:length(train_outcome.bysex[[sex]]),]
       test_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
-      remove(dat.harmonized)
     }
-  }
-  if(harm==2) 
-  {
-    for (sex in 1:2)
+    if(harm==2) 
     {
-      dat.all=rbind(data.matrix(train_feat.bysex[[sex]]),data.matrix(test_feat.bysex[[sex]]))
       dat.harmonized =CovBat::covbat(dat=t(dat.all), eb=eb,
-                                               bat=c(rep("train",length(train_outcome.bysex[[sex]])),rep("test",length(test_outcome.bysex[[sex]]))),
-                                               mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
+                                     bat=c(rep("train",length(train_outcome.bysex[[sex]])),rep("test",length(test_outcome.bysex[[sex]]))),
+                                     mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
       
       train_feat.bysex[[sex]]=t(dat.harmonized$dat.covbat)[1:length(train_outcome.bysex[[sex]]),]
       test_feat.bysex[[sex]]=t(dat.harmonized$dat.covbat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
-      remove(dat.harmonized)
     }
+    remove(dat.harmonized)
   }
-  
+ 
+  cat("completed harmonization\n")
   #activate parallel processing
   unregister_dopar = function() {
     env = foreach:::.foreachGlobals
@@ -95,7 +99,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       #2) applying models to testing dataset
       #3) calculate prediction metrics
       #4) calculate predicted scores
-
+      
       set.seed(123)
       CV.RR.CT = glmnet::cv.glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0,nfolds = 5)
       model1=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0, lambda = CV.RR.CT$lambda.1se)
@@ -173,7 +177,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       #results matrix
       xgbpredmetrics=matrix(NA,nrow=2, ncol=4)
       xgbpredscores=matrix(NA,nrow=length(test_outcome.bysex[[sex]]),ncol=2)
-
+      
       #training models
       model12=XGBlinear(train_feat.bysex[[sex]], train_outcome.bysex[[sex]])
       xgbpredmetrics[1,2:4]=extractmetric.bysex(model12,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
@@ -184,7 +188,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       xgbpredmetrics[2,2:4]=extractmetric.bysex(model13,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
       xgbpredscores[,2]=extractmetric.bysex(model13,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
       remove(model13)
-
+      
       #formatting results matrix
       xgbpredmetrics=data.frame(xgbpredmetrics)
       colnames(xgbpredmetrics)=c("model","r","MAE","bias")
