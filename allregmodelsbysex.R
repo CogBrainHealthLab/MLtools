@@ -205,7 +205,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   } 
   
   #recombine sex partitions  
-  pred_outcome.recomb=rbind(results[[2]],results[[4]])[c(test.M.idx,test.F.idx),]
+  pred_outcome.recomb=rbind(results[[2]],results[[4]])
   test_outcome.recomb=c(test_outcome.bysex[[1]],test_outcome.bysex[[2]])
   
   #prediction metrics in recombined data
@@ -231,7 +231,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   cat(paste("\nModel with highest r: ",predmetrics.recomb$model[max.idx],"; r=",round(max(as.numeric(predmetrics.recomb$r),na.rm=T),3),"\n",sep=""))
   cat(paste("Model with lowest MAE: ",predmetrics.recomb$model[min.idx],"; MAE=",round(min(as.numeric(predmetrics.recomb$MAE),na.rm=T),3),sep=""))
 
-  returnobj=list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb)
+  returnobj=list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb[c(test.M.idx,test.F.idx),])
   names(returnobj)=c("predmetrics.M","predmetrics.F","predmetrics.all","predscores")
   return(returnobj)
 }
