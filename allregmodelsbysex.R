@@ -18,7 +18,6 @@ extractmetric.bysex=function(model,test_feat, test_outcome)
 pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F, harm=0, eb=T, train_site)
 {
   
-  
   #check if train_feat contains columns of 0s, if so, these columns are removed
   col0_idx=which(colSums(train_feat)==0)
   if(length(col0_idx)>1)
@@ -231,7 +230,9 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   cat(paste("\nModel with highest r: ",predmetrics.recomb$model[max.idx],"; r=",round(max(as.numeric(predmetrics.recomb$r),na.rm=T),3),"\n",sep=""))
   cat(paste("Model with lowest MAE: ",predmetrics.recomb$model[min.idx],"; MAE=",round(min(as.numeric(predmetrics.recomb$MAE),na.rm=T),3),sep=""))
 
-  returnobj=list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb[c(test.M.idx,test.F.idx),])
+  pred_outcome.recomb.ordered=pred_outcome.recomb[order(c(test.M.idx,test.F.idx)),]
+  
+  returnobj=list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb.ordered)
   names(returnobj)=c("predmetrics.M","predmetrics.F","predmetrics.all","predscores")
   return(returnobj)
 }
