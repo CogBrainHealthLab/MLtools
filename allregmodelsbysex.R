@@ -236,3 +236,30 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   names(returnobj)=c("predmetrics.M","predmetrics.F","predmetrics.all","predscores")
   return(returnobj)
 }
+
+plot.metrics=function(results)
+{
+  results$modelno=1:NROW(results)
+  a=ggplot2::ggplot(results,ggplot2::aes(x=modelno,y=as.numeric(r), group=1))+
+    ggplot2::geom_point()+
+    ggplot2::geom_line()+
+    ggplot2::scale_x_continuous(breaks=1:NROW(results))+
+    ggplot2::labs(x=NULL, y="r")+
+    ggplot2::theme(axis.text.x=ggplot2::element_blank(),plot.margin=grid::unit(c(0,0,0,0), "mm"))
+  
+  b=ggplot2::ggplot(results,ggplot2::aes(x=modelno,y=as.numeric(MAE), group=1))+
+    ggplot2::geom_point()+
+    ggplot2::geom_line()+
+    ggplot2::scale_x_continuous(breaks=1:NROW(results))+
+    ggplot2::labs(x=NULL, y="MAE")+
+    ggplot2::theme(axis.text.x=ggplot2::element_blank(),plot.margin=grid::unit(c(0,0,0,0), "mm"))
+  
+  c=ggplot2::ggplot(results,ggplot2::aes(x=modelno,y=as.numeric(bias), group=1))+
+    ggplot2::geom_point()+
+    ggplot2::geom_line()+
+    ggplot2::scale_x_continuous(breaks=1:NROW(results),labels=results$model)+
+    ggplot2::labs(x=NULL, y="bias")+
+    ggplot2::theme(axis.text.x=ggplot2::element_text(angle=45, hjust=1),plot.margin=grid::unit(c(0,0,0,0), "mm"))
+  
+  return(cowplot::plot_grid(a,b,c,nrow = 3,rel_heights = c(0.3,0.3,0.45),align="v",axis="lr"))
+}
