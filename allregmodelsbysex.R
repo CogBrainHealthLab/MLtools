@@ -15,7 +15,7 @@ extractmetric.bysex=function(model,test_feat, test_outcome)
 }
 
 ##Runs regression models
-pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F, harm=1, eb=T, train_site)
+pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F, harm=1, eb=F, train_site)
 {
   
   #check if train_feat contains columns of 0s, if so, these columns are removed
