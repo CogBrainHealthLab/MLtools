@@ -101,13 +101,13 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       
       set.seed(123)
       CV.RR.CT = glmnet::cv.glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0,nfolds = 5)
-      model1=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0, lambda = CV.RR.CT$lambda.1se)
+      model1=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0, lambda = CV.RR.CT$lambda.min)
       predmetrics[1,2:4]=extractmetric.bysex(model1,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
       predscores[,1]=extractmetric.bysex(model1,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
       remove(model1,CV.RR.CT)
       
       CV.RR.CT = glmnet::cv.glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 1,nfolds = 5)
-      model2=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 1, lambda = CV.RR.CT$lambda.1se)
+      model2=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 1, lambda = CV.RR.CT$lambda.min)
       predmetrics[2,2:4]=extractmetric.bysex(model2,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
       predscores[,2]=extractmetric.bysex(model2,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
       remove(model2,CV.RR.CT)
