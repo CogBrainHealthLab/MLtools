@@ -47,3 +47,7 @@ lm_across_window=function(window_duration,nframes,nthread, timeseries,model)
   return(av.coef.vector)  
   closeAllConnections()
 }
+##################################################################################################################
+##################################################################################################################
+#source("https://github.com/CogBrainHealthLab/MLtools/edit/main/lm_across_windows.R?raw=TRUE")
+#get_coefvector(window_duration = c(80,160),nframes = 251,nthread = 5,timeseries = CC.ts,model = cc.beh[,c("Sex","age_std")])
