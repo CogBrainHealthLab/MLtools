@@ -4,7 +4,7 @@
 ##################################################################################################################
 ##################################################################################################################
 
-lm_across_window=function(window_duration,nframes,nthread, timeseries,model)
+lm_across_window=function(window_duration,nthread, timeseries,model)
 {
   ##check and remove subjects with incomplete data
   idx.na=which(!complete.cases(model))
@@ -14,6 +14,11 @@ lm_across_window=function(window_duration,nframes,nthread, timeseries,model)
     timeseries=timeseries[-idx.na]
     cat(paste0(length(idx.na)," subjects with missing data detected"))
   }
+  ##check number of frames
+  frames=rep(NA,length(timeseries))
+  for (sub in 1:length(timeseries))  {frames[sub]=NCOL(timeseries[[sub]])}  
+  nframes=min(frames)
+
   ## correlation function to be used within lapply()
   window.corr=function(ts,start,end)
   {
