@@ -16,7 +16,7 @@ lm_across_window=function(window_duration,nthread, timeseries,model)
   }
   ##check number of frames
   frames=rep(NA,length(timeseries))
-  for (sub in 1:length(timeseries))  {frames[sub]=NCOL(timeseries[[sub]])}  
+  for (sub in 1:length(timeseries))  {frames[sub]=NROW(timeseries[[sub]])}  
   nframes=min(frames)
   cat(paste0("nframes=",nframes))
 
@@ -56,4 +56,4 @@ lm_across_window=function(window_duration,nthread, timeseries,model)
 ##################################################################################################################
 ##################################################################################################################
 #source("https://github.com/CogBrainHealthLab/MLtools/edit/main/lm_across_windows.R?raw=TRUE")
-#get_coefvector(window_duration = c(80,160),nframes = 251,nthread = 5,timeseries = CC.ts,model = cc.beh[,c("Sex","age_std")])
+#lm_across_window(window_duration = c(80,160),nthread = 5,timeseries = CC.ts,model = cc.beh[,c("Sex","age_std")])
