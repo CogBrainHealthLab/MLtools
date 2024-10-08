@@ -18,6 +18,7 @@ lm_across_window=function(window_duration,nthread, timeseries,model)
   frames=rep(NA,length(timeseries))
   for (sub in 1:length(timeseries))  {frames[sub]=NCOL(timeseries[[sub]])}  
   nframes=min(frames)
+  cat(paste0("nframes=",nframes)
 
   ## correlation function to be used within lapply()
   window.corr=function(ts,start,end)
