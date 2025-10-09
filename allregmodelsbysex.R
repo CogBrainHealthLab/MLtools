@@ -20,7 +20,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   
   #check if train_feat contains columns of 0s, if so, these columns are removed
   col0_idx=union(which(colSums(train_feat)==0),which(colSums(test_feat)==0))
-  if(length(col0_idx)>1)
+  if(length(col0_idx)>0)
   {
     train_feat=train_feat[,-col0_idx]
     test_feat=test_feat[,-col0_idx]
