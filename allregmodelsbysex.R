@@ -164,6 +164,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       predmetrics$MAE=as.numeric(predmetrics$MAE)
       
       return(list(predmetrics,predscores))
+      closeAllConnections()  
     }
   
   ## XGB needs to be executed outside the foreach loops
