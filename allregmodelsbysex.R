@@ -61,7 +61,6 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     dat.all=rbind(data.matrix(train_feat.bysex[[sex]]),data.matrix(test_feat.bysex[[sex]]))
     if(harm==1) 
     {
-      if
       dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), eb=eb,
                                                batch=c(train_site.bysex[[sex]],test_site.bysex[[sex]]),
                                                mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
