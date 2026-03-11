@@ -15,7 +15,7 @@ extractmetric.bysex=function(model,test_feat, test_outcome)
 }
 
 ##Runs regression models
-pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F, harm=1, eb=F, train_site)
+pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, test_feat,test_sex, xgb=F, harm=1, eb=F, train_site, test_site)
 {
   
   #check if train_feat contains columns of 0s, if so, these columns are removed
@@ -42,6 +42,12 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     train_site=rep("train",length(train_outcome))
   }
   train_site.bysex=list(train_site[train.M.idx],train_site[train.F.idx])
+
+  if(missing("test_site"))
+  {
+    test_site=rep("test",length(test_outcome))
+  }
+  test_site.bysex=list(test_site[test.M.idx],test_site[test.F.idx])
   
   test_outcome.bysex=list(test_outcome[test.M.idx],test_outcome[test.F.idx])
   test_feat.bysex=list(test_feat[test.M.idx,],test_feat[test.F.idx,])
@@ -55,8 +61,9 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     dat.all=rbind(data.matrix(train_feat.bysex[[sex]]),data.matrix(test_feat.bysex[[sex]]))
     if(harm==1) 
     {
+      if
       dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), eb=eb,
-                                               batch=c(train_site.bysex[[sex]],rep("test",length(test_outcome.bysex[[sex]]))),
+                                               batch=c(train_site.bysex[[sex]],test_site.bysex[[sex]]),
                                                mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
       
       train_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[1:length(train_outcome.bysex[[sex]]),]
@@ -65,7 +72,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     if(harm==2) 
     {
       dat.harmonized =CovBat::covbat(dat=t(dat.all), eb=eb,
-                                     bat=c(rep("train",length(train_outcome.bysex[[sex]])),rep("test",length(test_outcome.bysex[[sex]]))),
+                                     bat=c(train_site.bysex[[sex]],test_site.bysex[[sex]]),
                                      mod=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))  
       
       train_feat.bysex[[sex]]=t(dat.harmonized$dat.covbat)[1:length(train_outcome.bysex[[sex]]),]
