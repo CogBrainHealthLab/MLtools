@@ -82,7 +82,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     ##combat-GAM
     if(harm==3) 
     {
-      covar=data.frame(outcome=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]])))
+      covar=data.frame(outcome=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]]))
       dat.harmonized =ComBatFamily::combat_gam(dat=dat.all, eb=eb,covar=covar,
                                      bat=as.factor(c(train_site.bysex[[sex]],test_site.bysex[[sex]])),
                                      formula=y ~ s(outcome))  
