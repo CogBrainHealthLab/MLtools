@@ -59,6 +59,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   for (sex in 1:2)
   {
     dat.all=rbind(data.matrix(train_feat.bysex[[sex]]),data.matrix(test_feat.bysex[[sex]]))
+    ##combat
     if(harm==1) 
     {
       dat.harmonized =neuroCombat::neuroCombat(dat=t(dat.all), eb=eb,
@@ -68,6 +69,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       train_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[1:length(train_outcome.bysex[[sex]]),]
       test_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
     }
+    ##covbat
     if(harm==2) 
     {
       dat.harmonized =CovBat::covbat(dat=t(dat.all), eb=eb,
@@ -76,6 +78,17 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       
       train_feat.bysex[[sex]]=t(dat.harmonized$dat.covbat)[1:length(train_outcome.bysex[[sex]]),]
       test_feat.bysex[[sex]]=t(dat.harmonized$dat.covbat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
+    }
+    ##combat-GAM
+    if(harm==3) 
+    {
+      covar=data.frame(outcome=c(train_outcome.bysex[[sex]],test_outcome.bysex[[sex]])))
+      dat.harmonized =ComBatFamily::combat_gam(dat=dat.all, eb=eb,covar=covar,
+                                     bat=as.factor(c(train_site.bysex[[sex]],test_site.bysex[[sex]])),
+                                     formula=y ~ s(outcome))  
+      
+      train_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[1:length(train_outcome.bysex[[sex]]),]
+      test_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
     }
     remove(dat.harmonized)
   }
