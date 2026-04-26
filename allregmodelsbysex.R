@@ -87,8 +87,8 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
                                      bat=as.factor(c(train_site.bysex[[sex]],test_site.bysex[[sex]])),
                                      formula=y ~ s(outcome))  
       
-      train_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[1:length(train_outcome.bysex[[sex]]),]
-      test_feat.bysex[[sex]]=t(dat.harmonized$dat.combat)[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
+      train_feat.bysex[[sex]]=dat.harmonized$dat.combat[1:length(train_outcome.bysex[[sex]]),]
+      test_feat.bysex[[sex]]=dat.harmonized$dat.combat[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
     }
     remove(dat.harmonized)
   }
