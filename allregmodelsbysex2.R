@@ -49,6 +49,10 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   
   test_outcome.bysex=list(test_outcome[test.M.idx],test_outcome[test.F.idx])
   test_feat.bysex=list(test_feat[test.M.idx,],test_feat[test.F.idx,])
+
+  #set default formula
+  if(model=="lm" && missing("formula")) {formula=y~outcome}
+  if(model=="gam" && missing("formula")) {formula=y~s(outcome)}
   
   remove(test_outcome,train_outcome,test_feat,train_feat,train.M.idx,train.F.idx)
 
@@ -86,8 +90,8 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
                                  bat=as.factor(c(train_site.bysex[[sex]],test_site.bysex[[sex]])),
                                  formula=formula)
           
-          train_feat.bysex[[sex]]=dat.harmonized$dat.combat[1:length(train_outcome.bysex[[sex]]),]
-          test_feat.bysex[[sex]]=dat.harmonized$dat.combat[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
+          train_feat.bysex[[sex]]=dat.harmonized$dat.covbat[1:length(train_outcome.bysex[[sex]]),]
+          test_feat.bysex[[sex]]=dat.harmonized$dat.covbat[(length(train_outcome.bysex[[sex]])+1):(length(train_outcome.bysex[[sex]])+length(test_outcome.bysex[[sex]])),]  
         }
         remove(dat.harmonized)
       
