@@ -200,6 +200,7 @@ XGBtree=function(train_dat,outcome, alpharange=c(0,1), lambdarange=c(1,5),etaran
                             subsample=opt_params$subsample,
                             
                             nround = xgbcv$evaluation_log$iter[which.min(xgbcv$evaluation_log$test_mae_mean)])
+  unlink("train.buffer")
   return(xg_mod)
 }
 
