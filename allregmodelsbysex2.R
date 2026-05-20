@@ -51,8 +51,8 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   test_feat.bysex=list(test_feat[test.M.idx,],test_feat[test.F.idx,])
 
   #set default formula
-  if(model=="lm" && missing("formula")) {formula=y~outcome}
-  if(model=="gam" && missing("formula")) {formula=y~s(outcome)}
+  if(model==lm && missing("formula")) {formula=y~outcome}
+  if(model==gam && missing("formula")) {formula=y~s(outcome)}
   
   remove(test_outcome,train_outcome,test_feat,train_feat,train.M.idx,train.F.idx)
 
