@@ -4,8 +4,8 @@
 ##################################################################################################################
 ##################################################################################################################
 #XGBlinear
-XGBlinear <- function(train_dat, outcome, alpharange = c(0,1), lambdarange = c(1,5),
-                      etarange = c(0.001, 0.2), nthread = 4, nround = 500) {
+XGBlinear <- function(train_dat, outcome, alpharange = c(0,10), lambdarange = c(0,10),
+                      etarange = c(0.001, 0.3), nthread = 5, nround = 500) {
   
   # Check and install required packages
   list.of.packages <- c("doParallel", "parallel", "ParBayesianOptimization", "xgboost", "caret")
@@ -16,7 +16,11 @@ XGBlinear <- function(train_dat, outcome, alpharange = c(0,1), lambdarange = c(1
   }
   
   folds <- caret::createFolds(outcome, k = 5)
-  bounds <- list(lambda = lambdarange, alpha = alpharange, eta = etarange)
+  bounds <- list(
+    eta        = c(0.001, 0.1),
+    log_lambda = c(log(0.1), log(100)),
+    log_alpha  = c(log(0.1), log(100))
+  )
   
   # Save DMatrix to disk immediately, don't keep in memory
   dtrain <- xgboost::xgb.DMatrix(data = train_dat, label = outcome)
@@ -32,7 +36,11 @@ XGBlinear <- function(train_dat, outcome, alpharange = c(0,1), lambdarange = c(1
     gc()
   }, add = TRUE)
   
-  obj_func <- function(eta, lambda, alpha, nround) {
+  obj_func <- function(eta, log_lambda, log_alpha, nround) {
+    # Back-transform first
+    lambda <- exp(log_lambda)
+    alpha  <- exp(log_alpha)
+    
     param <- list(
       nthread = 1,
       learning_rate  = eta,
@@ -46,12 +54,13 @@ XGBlinear <- function(train_dat, outcome, alpharange = c(0,1), lambdarange = c(1
     xgbcv <- xgboost::xgb.cv(
       params               = param,
       data                 = xgboost::xgb.DMatrix("train.buffer"),
-      nround               = 500,
+      nround               = 1000,
       folds                = folds,
       prediction           = FALSE,
-      early_stopping_rounds = 5,
+      early_stopping_rounds = 30,
       verbose              = 0,
-      maximize             = FALSE
+      maximize             = FALSE,
+      save_models           = FALSE 
     )
     
     # Extract only the two scalars needed — drop the whole log object
@@ -66,10 +75,12 @@ XGBlinear <- function(train_dat, outcome, alpharange = c(0,1), lambdarange = c(1
   bayes_out <- ParBayesianOptimization::bayesOpt(
     FUN        = obj_func,
     bounds     = bounds,
-    initPoints = length(bounds) + 2,
+    initPoints = 20,
     parallel   = TRUE,
-    iters.n    = nthread,
-    iters.k    = nthread
+    iters.n    = 50,
+    iters.k    = nthread,
+    acqThresh  = 0.0,
+    eps = 0.5
   )
   
   opt_params <- c(
@@ -100,6 +111,7 @@ XGBlinear <- function(train_dat, outcome, alpharange = c(0,1), lambdarange = c(1
     nrounds = opt.nround,
     verbose = 0
   )
+  
   return(xg_mod)
 }
 ##################################################################################################################
