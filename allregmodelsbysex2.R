@@ -97,73 +97,88 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
       
 
       #setting up results matrix
-      predmetrics=matrix(NA,nrow=11, ncol=4)
-      predmetrics[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)")
+      predmetrics=matrix(NA,nrow=10, ncol=4)
+      predmetrics[,1]=c("RidgeR", "LassoR","ElasticNet","PLSR","GPR (Linear)","SVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)","KQR (RBF)")
       
-      predscores=matrix(NA,nrow=length(test_outcome.bysex[[sex]]),ncol=11)
+      predscores=matrix(NA,nrow=length(test_outcome.bysex[[sex]]),ncol=10)
       #start of training/testing
       #1) Fitting regression models on training dataset
       #2) applying models to testing dataset
       #3) calculate prediction metrics
       #4) calculate predicted scores
       
-      set.seed(123)
+      count=1
+      
       CV.RR.CT = glmnet::cv.glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0,nfolds = 5)
-      model1=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0, lambda = CV.RR.CT$lambda.min)
-      predmetrics[1,2:4]=extractmetric.bysex(model1,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      predscores[,1]=extractmetric.bysex(model1,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model1,CV.RR.CT)
+      RR.mod=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0, lambda = CV.RR.CT$lambda.min)
+      predmetrics[count,2:4]=extractmetric.bysex(RR.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
+      predscores[,count]=extractmetric.bysex(RR.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(RR.mod,CV.RR.CT)
       
-      CV.RR.CT = glmnet::cv.glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 1,nfolds = 5)
-      model2=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 1, lambda = CV.RR.CT$lambda.min)
-      predmetrics[2,2:4]=extractmetric.bysex(model2,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      predscores[,2]=extractmetric.bysex(model2,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model2,CV.RR.CT)
+      count=count+1
       
-      model3 = pls::plsr(train_outcome.bysex[[sex]]~train_feat.bysex[[sex]],ncomp=20,segments=5, validation="CV")
-      predmetrics[3,2:4]=extractmetric.bysex(model3,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      predscores[,3]=extractmetric.bysex(model3,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model3)
+      CV.lasso.CT = glmnet::cv.glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 1,nfolds = 5)
+      lasso.mod=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 1, lambda = CV.lasso.CT$lambda.min)
+      predmetrics[count,2:4]=extractmetric.bysex(lasso.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
+      predscores[,count]=extractmetric.bysex(lasso.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(lasso.mod,CV.lasso.CT)
       
-      model4=kernlab::gausspr(x=train_feat.bysex[[sex]], y=train_outcome.bysex[[sex]], kernel="vanilladot")
-      predmetrics[4,2:4]=extractmetric.bysex(model4,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      predscores[,4]=extractmetric.bysex(model4,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model4)
+      count=count+1
       
-      model5=kernlab::ksvm(x=train_feat.bysex[[sex]], y=train_outcome.bysex[[sex]], kernel="vanilladot")
-      predmetrics[5,2:4]=extractmetric.bysex(model5,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      predscores[,5]=extractmetric.bysex(model5,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model5)
+      CV.Enet.CT = glmnet::cv.glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 1,nfolds = 5)
+      Enet.mod=glmnet::glmnet(train_feat.bysex[[sex]], train_outcome.bysex[[sex]], alpha = 0.5, lambda = CV.Enet.CT$lambda.min)
+      predmetrics[count,2:4]=extractmetric.bysex(Enet.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
+      predscores[,count]=extractmetric.bysex(Enet.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(Enet.mod,CV.Enet.CT)
       
-      model6=kernlab::rvm(x=train_feat.bysex[[sex]], y=train_outcome.bysex[[sex]], kernel="vanilladot")
-      predmetrics[6,2:4]=extractmetric.bysex(model6,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      predscores[,6]=extractmetric.bysex(model6,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model6)
+      count=count+1
       
-      model7=kernlab::kqr(x=train_feat.bysex[[sex]], y=train_outcome.bysex[[sex]], kernel="vanilladot")
-      predmetrics[7,2:4]=extractmetric.bysex(model7,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      predscores[,7]=extractmetric.bysex(model7,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model7)
+      pls.mod = pls::plsr(train_outcome.bysex[[sex]]~train_feat.bysex[[sex]],ncomp=20,segments=5, validation="CV")
+      predmetrics[count,2:4]=extractmetric.bysex(pls.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
+      predscores[,count]=extractmetric.bysex(pls.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(pls.mod)
       
-      model8=kernlab::gausspr(x=train_feat.bysex[[sex]], y=as.numeric(train_outcome.bysex[[sex]]), kernel="rbfdot")
-      predmetrics[8,2:4]=extractmetric.bysex(model8,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      predscores[,8]=extractmetric.bysex(model8,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model8)
+      count=count+1
       
-      model9=kernlab::ksvm(x=train_feat.bysex[[sex]], y=train_outcome.bysex[[sex]], kernel="rbfdot")
-      predmetrics[9,2:4]=extractmetric.bysex(model9,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      predscores[,9]=extractmetric.bysex(model9,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model9)
+      gprlinear.mod=kernlab::gausspr(train_feat.bysex[[sex]],train_outcome.bysex[[sex]], kernel="vanilladot")
+      predmetrics[count,2:4]=extractmetric.bysex(gprlinear.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
+      predscores[,count]=extractmetric.bysex(gprlinear.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(gprlinear.mod)
       
-      model10=kernlab::rvm(x=train_feat.bysex[[sex]], y=train_outcome.bysex[[sex]], kernel="rbfdot")
-      predmetrics[10,2:4]=extractmetric.bysex(model10,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      predscores[,10]=extractmetric.bysex(model10,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model10)
+      count=count+1
+
+      svmlinear.mod=kernlab::ksvm(train_feat.bysex[[sex]],train_outcome.bysex[[sex]], kernel="vanilladot")
+      predmetrics[count,2:4]=extractmetric.bysex(svmlinear.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
+      predscores[,count]=extractmetric.bysex(svmlinear.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(svmlinear.mod)
       
-      model11=kernlab::kqr(x=train_feat.bysex[[sex]], y=train_outcome.bysex[[sex]], kernel="rbfdot")
-      predmetrics[11,2:4]=extractmetric.bysex(model11,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      predscores[,11]=extractmetric.bysex(model11,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model11)
+      count=count+1
+
+      kqrlinear.mod=kernlab::kqr(train_feat.bysex[[sex]],train_outcome.bysex[[sex]], kernel="vanilladot")
+      predmetrics[count,2:4]=extractmetric.bysex(kqrlinear.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
+      predscores[,count]=extractmetric.bysex(kqrlinear.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(kqrlinear.mod)
+      
+      count=count+1
+      
+      gprrbf.mod=kernlab::gausspr(train_feat.bysex[[sex]],train_outcome.bysex[[sex]], kernel="rbfdot")
+      predmetrics[count,2:4]=extractmetric.bysex(gprrbf.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
+      predscores[,count]=extractmetric.bysex(gprrbf.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(gprrbf.mod)
+      
+      count=count+1
+      
+      svmrbf.mod=kernlab::ksvm(train_feat.bysex[[sex]],train_outcome.bysex[[sex]], kernel="rbfdot")
+      predmetrics[count,2:4]=extractmetric.bysex(svmrbf.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
+      predscores[,count]=extractmetric.bysex(svmrbf.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(svmrbf.mod)
+      
+      count=count+1
+      
+      kqrrbf.mod=kernlab::kqr(train_feat.bysex[[sex]],train_outcome.bysex[[sex]], kernel="rbfdot")
+      predmetrics[count,2:4]=extractmetric.bysex(kqrrbf.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
+      predscores[,count]=extractmetric.bysex(kqrrbf.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(kqrrbf.mod)
       
       #formatting results matrix
       predmetrics=data.frame(predmetrics)
@@ -176,26 +191,22 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     }
   
   ## XGB needs to be executed outside the foreach loops
-  if(xgb==T)
+ if(xgb==T)
   {
-    source("https://github.com/CogBrainHealthLab/MLtools/blob/main/xgb.R?raw=TRUE")
     xgbresults=list()
     for (sex in 1:2)
     {
       #results matrix
-      xgbpredmetrics=matrix(NA,nrow=2, ncol=4)
-      xgbpredscores=matrix(NA,nrow=length(test_outcome.bysex[[sex]]),ncol=2)
+      xgbpredmetrics=matrix(NA,nrow=1, ncol=4)
+      xgbpredscores=matrix(NA,nrow=length(test_outcome.bysex[[sex]]),ncol=1)
       
       #training models
-      model12=XGBlinear(train_feat.bysex[[sex]], train_outcome.bysex[[sex]])
-      xgbpredmetrics[1,2:4]=extractmetric.bysex(model12,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      xgbpredscores[,1]=extractmetric.bysex(model12,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model12)
+      xgb.mod=XGBlinear(train_feat.bysex[[sex]], train_outcome.bysex[[sex]])
+      xgbpredmetrics[1,2:4]=extractmetric.bysex(xgb.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
+      xgbpredscores[,1]=extractmetric.bysex(xgb.mod,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
+      remove(xgb.mod)
       
-      model13=XGBtree(train_feat.bysex[[sex]], train_outcome.bysex[[sex]])
-      xgbpredmetrics[2,2:4]=extractmetric.bysex(model13,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[1]]
-      xgbpredscores[,2]=extractmetric.bysex(model13,test_feat.bysex[[sex]],test_outcome.bysex[[sex]])[[2]]
-      remove(model13)
+      gc()
       
       #formatting results matrix
       xgbpredmetrics=data.frame(xgbpredmetrics)
@@ -221,10 +232,10 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   
   if(xgb==F)
   {
-    predmetrics.recomb[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)")  
+    predmetrics.recomb[,1]=c("RidgeR", "LassoR","ElasticNet","PLSR","GPR (Linear)","SVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)","KQR (RBF)")
   } else
   {
-    predmetrics.recomb[,1]=c("RidgeR", "LassoR","PLSR","GPR (Linear)","SVM (Linear)", "RVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)", "RVM (RBF)", "KQR (RBF)", "XGB (linear)","XGB (Tree)")  
+    predmetrics.recomb[,1]=c("RidgeR", "LassoR","ElasticNet","PLSR","GPR (Linear)","SVM (Linear)","KQR (Linear)", "GPR (RBF)", "SVM (RBF)","KQR (RBF)", "XGB (linear)")
   }
   
   predmetrics.recomb=data.frame(predmetrics.recomb)
