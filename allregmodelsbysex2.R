@@ -193,6 +193,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   ## XGB needs to be executed outside the foreach loops
  if(xgb==T)
   {
+    source("https://github.com/CogBrainHealthLab/MLtools/blob/main/xgb.R?raw=TRUE")
     xgbresults=list()
     for (sex in 1:2)
     {
