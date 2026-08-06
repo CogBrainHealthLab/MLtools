@@ -266,9 +266,6 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   
   returnobj=list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb.ordered,pred_outcome.recomb.ordered.biascorrected)
   names(returnobj)=c("predmetrics.M","predmetrics.F","predmetrics.all","predscores","predscores.biascorrected")
-  
-  returnobj=list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb.ordered)
-  names(returnobj)=c("predmetrics.M","predmetrics.F","predmetrics.all","predscores")
   return(returnobj)
 }
 
