@@ -253,6 +253,20 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   
   pred_outcome.recomb.ordered=pred_outcome.recomb[order(c(test.M.idx,test.F.idx)),]
   
+  ##bias correction
+  pred_outcome.recomb.ordered.biascorrected=pred_outcome.recomb.ordered
+  for(model in 1:NCOL(pred_outcome.recomb.ordered))
+  {
+    agegap=pred_outcome.recomb.ordered[,model]-test_outcome
+    biasmod=lm(agegap~test_outcome)
+    offset=(coef(biasmod)[2]*test_outcome)+coef(biasmod)[1]
+    pred_outcome.recomb.ordered.biascorrected[,model]=pred_outcome.recomb.ordered[,model]-offset
+    remove(agegap, biasmod, offset)
+  }
+  
+  returnobj=list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb.ordered,pred_outcome.recomb.ordered.biascorrected)
+  names(returnobj)=c("predmetrics.M","predmetrics.F","predmetrics.all","predscores","predscores.biascorrected")
+  
   returnobj=list(results[[1]],results[[3]],predmetrics.recomb,pred_outcome.recomb.ordered)
   names(returnobj)=c("predmetrics.M","predmetrics.F","predmetrics.all","predscores")
   return(returnobj)
