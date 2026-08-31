@@ -64,7 +64,7 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
   unregister_dopar()
   
   cl=parallel::makeCluster(2)
-  doParallel::registerDoParallel(2)
+  doParallel::registerDoParallel(cl)
   `%dopar%` = foreach::`%dopar%`
   
   results=foreach::foreach(sex=1:2, .combine="c",.packages = c("glmnet","pls","kernlab","ComBatFamily"), .export ="extractmetric.bysex")  %dopar%
