@@ -62,8 +62,16 @@ pred.allmodels.bysex=function(train_outcome, train_feat,train_sex,test_outcome, 
     rm(list=ls(name=env), pos=env)
   }
   unregister_dopar()
-  
-  cl=parallel::makeCluster(2)
+
+# Detect if the operating system is macOS (Darwin)
+if (Sys.info()[["sysname"]] == "Darwin") {
+  cluster_type <- "PSOCK"
+} else {
+  cluster_type <- "FORK"
+}
+# Initialize the cluster safely based on the OS
+  registerDoParallel(cl)
+  cl=parallel::makeCluster(2, type = cluster_type)
   doParallel::registerDoParallel(cl)
   `%dopar%` = foreach::`%dopar%`
   
